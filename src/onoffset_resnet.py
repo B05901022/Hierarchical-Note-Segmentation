@@ -157,6 +157,9 @@ for epoch in range(EPOCH):
     for step, xys in enumerate(train_loader):                 # gives batch data
         b_x1 = xys[0].contiguous() # reshape x to (batch, C, feat_size, time_frame)
         b_y1 = Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1, OUTPUT_SIZE)).cuda() # batch y
+        # b_x1 shape: (1,3,522,1290)
+        # b_y1 shape: (1,1290,6)
+
         loss = train_resnet_4loss(b_x1, b_y1, note_decoders, dec_optimizers, loss_funcs,
             INPUT_SIZE1, OUTPUT_SIZE, BATCH_SIZE, k=WINDOW_SIZE)
 
