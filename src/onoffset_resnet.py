@@ -159,16 +159,17 @@ for epoch in range(EPOCH):
         print(b_x1.shape)
         b_y1 = Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1, OUTPUT_SIZE)).cuda() # batch y
         print(b_y1.shape)
+        zzz
         loss = train_resnet_4loss(b_x1, b_y1, note_decoders, dec_optimizers, loss_funcs,
             INPUT_SIZE1, OUTPUT_SIZE, BATCH_SIZE, k=WINDOW_SIZE)
 
-        total_loss += loss.item()
+        total_loss += loss
         loss_count += 1
 
         avg_loss = total_loss / loss_count
 
         if(step%10 == 0):
-            print('Epoch: ', epoch, '| Step: ', step, '| Loss: %.4f' % loss.item())
+            print('Epoch: ', epoch, '| Step: ', step, '| Loss: %.4f' % loss)
 
         if avg_loss < min_loss:
             print("Renewing best model ...")
