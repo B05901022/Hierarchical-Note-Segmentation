@@ -84,7 +84,7 @@ class BasicBlock(nn.Module):
         h  = self.shakedrop_layer(h) if self.shakedrop else h
         #print('h', h.shape)
         
-        #padding zero is enough for pyramidNet
+        ###padding zero is enough for pyramidNet
         pad_zero = torch.autograd.Variable(torch.zeros(h0.size(0),
                                                        h.size(1)-h0.size(1),
                                                        h0.size(2),
@@ -131,12 +131,12 @@ class PyramidNet_ShakeDrop(nn.Module):
         
         self.layer1  = self._make_layer(n_units, block, 1, (1,1))
         self.layer2  = self._make_layer(n_units, block, 2, (0,1))
-        self.layer3  = self._make_layer(n_units, block, 2, (0,0))
+        self.layer3  = self._make_layer(n_units, block, 2, (1,0))
         
         self.bn_out  = nn.BatchNorm2d(self.in_chs[-1])
         self.relu_out= nn.ReLU(inplace=True)
         self.avgpool = nn.AvgPool2d(kernel_size=(3,3), stride=(2,2), padding=1)
-        self.fc_out  = nn.Linear(self.in_chs[-1]*11, num_class)
+        self.fc_out  = nn.Linear(self.in_chs[-1]*33, num_class) ### *11 for 174
         
         #output shape (batch, 6)
         
@@ -172,21 +172,23 @@ class PyramidNet_ShakeDrop(nn.Module):
             stride = 1
             padding = 1
         return nn.Sequential(*layers)
-            
+ 
+"""           
 if __name__ == '__main__':
     from torchsummaryX import summary
     #import torchvision.models as models
     #resnet18 = models.resnet18(pretrained=False)
     #num_ftrs = resnet18.fc.in_features
-    #resnet18.fc = nn.Linear(num_ftrs*3, 6)
+    #resnet18.fc = nn.Linear(num_ftrs, 6)
     #num_fout = resnet18.conv1.out_channels
     #resnet18.conv1 = nn.Conv2d(3, num_fout, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-    #resnet18.avgpool = nn.AvgPool2d(2)#nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
+    #resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)#nn.AvgPool2d(2)
     #resnet18 = resnet18.cuda()
-    #summary(resnet18, torch.zeros(1,3,174,19).cuda())
+    #summary(resnet18, torch.zeros(1,3,522,19).cuda())
     model = PyramidNet_ShakeDrop().cuda()
-    summary(model, torch.zeros(1,3,174,19).cuda())
+    summary(model, torch.zeros(1,3,522,19).cuda())
     
+    #under (1,3,174,19)
     #resnet18 params:11.18573M, Mult-Adds:171.71M
     #PyramidNet:
     #   20:   params:5.02695M,  Mult-Adds:687.33M
@@ -195,3 +197,4 @@ if __name__ == '__main__':
     #   56:   params:14.44319M, Mult-Adds:1915.06M
     #  110:   params:28.50341M, Mult-Adds:3752.85M
     # 1202:   params:314.34859M,Mult-Adds:41231.14M
+"""
