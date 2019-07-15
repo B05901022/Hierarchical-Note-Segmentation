@@ -122,7 +122,7 @@ class PyramidNet_ShakeDrop(nn.Module):
         
         ### Model ###
         
-        # input shape (batch, 3, 174, 19)
+        # input shape (batch, 3, 522, 19)
         
         self.conv1   = nn.Conv2d(conv1_in_channel, self.in_chs[0], kernel_size=(7,7),
                                stride=(2,2), padding=(3,3), bias=False)
@@ -140,6 +140,17 @@ class PyramidNet_ShakeDrop(nn.Module):
         
         #output shape (batch, 6)
         
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                # MSRA initializer
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                m.bias.data.zero_()
+                
     def forward(self, x):
         #print('1',x.shape)
         h = self.relu1(self.bn1(self.conv1(x)))
