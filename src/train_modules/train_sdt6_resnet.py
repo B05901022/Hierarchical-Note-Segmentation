@@ -34,7 +34,8 @@ def train_resnet_4loss(input_t, target_Var, decoders, dec_opts,
 
             input_Var = Variable(torch.stack([ input_t[0, :, :, BATCH_SIZE*step+i-k:BATCH_SIZE*step+i-k+window_size]\
                            for i in range(BATCH_SIZE)], dim=0))
-
+            print(input_Var.shape)
+            sss
             onDecOut6 = onDec(input_Var)
             onDecOut1 = nn_softmax(onDecOut6[:, :2])
             onDecOut2 = nn_softmax(onDecOut6[:, 2:4])
