@@ -67,6 +67,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
+             transform_dict, # Cut-out, Frequency Masking, Pitch shift 
              sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
     # labeled_data   shape: (10, 3, 522, 19)
     # labeled_label  shape: (10, 6)
@@ -74,34 +75,45 @@ def Mixmatch(labeled_data, labeled_label,
     
     curr_model = curr_model.eval() # avoid influencing gradient calculations
     
-    aug_x = Augment_data(labeled_data)
+    transform  = transform_method(transform_dict)
+    
+    aug_x = transform(labeled_data, transform)
     aug_u = []
-    label_guess = None
+    label = None
     for k in range(augment_time):
-        aug_u_k = Augment_data(unlabeled_data)
+        aug_u_k = transform(unlabeled_data, transform)
         aug_u.append(aug_u_k)
-        if label_guess == None:
-            label_guess = curr_model(aug_u_k)
+        if label == None:
+            label = curr_model(aug_u_k)
         else:
-            label_guess += curr_model(aug_u_k)
-    label_guess /= k
-    # label_guess shape: (10, 6)
-    label = Sharpen(label_guess, sharpening_temp)
+            label += curr_model(aug_u_k)
+    label /= augment_time
+    # label shape: (10, 6)
+    label = Sharpen(label, sharpening_temp)
     
     stack_data  = torch.cat((aug_x, *aug_u), dim=0)
+    stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
     
     shuffle = torch.randperm(stack_data.size(0))
-    x_mix   = Mixup(aug_x, labeled_label, stack_data[shuffle[:aug_x.size(0)]])
-    u_mix   = Mixup(torch.cat(aug_u, dim=0), [label for i in range(k)], stack_data[shuffle[aug_x.size(0):]])
+    x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
+                                      stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
+                                      beta_dist_alpha)
+    u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), [label for i in range(augment_time)], 
+                                      stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
+                                      beta_dist_alpha)
     
-    return x_mix, u_mix
+    return x_mix_data, x_mix_label, u_mix_data, u_mix_label
+
+def transform_method(transform_dict):
     
-def Augment_data(orig_data):
+    # Cut-out, Frequency Masking, Pitch shift ... etc
     
-    # perform some audio data augmentation tips, or cutout etc
-    aug_data = orig_data
+    transform_list = []
     
-    return aug_data
+    if 'cutout' in transform_dict:
+        transform_list.append(Cutout(*transform_dict['cutout']))
+    
+    return transforms.Compose(transform_list)
 
 def Sharpen(dist, T):
     sharpen_dist = dist
@@ -110,6 +122,40 @@ def Sharpen(dist, T):
     return sharpen_dist
 
 def Mixup(data, label,
-          unlabel_data):
-    return 
-    
+          unlabel_data, unlabel_label,
+          alpha):
+    lam = np.random.beta(alpha, alpha)
+    lam = max(lam, 1-lam)
+    mixed_data  = lam*data  + (1-lam)*unlabel_data
+    mixed_label = lam*label + (1-lam)*unlabel_label
+    return mixed_data, mixed_label
+
+class CutOut(object):
+    '''
+    Better with normalized input
+    '''
+    def __init__(self, n_holes, length):
+        self.n_holes = n_holes
+        self.length  = length
+    def __call__(self, img):
+        h = img.size(1)
+        w = img.size(2)
+        
+        mask = np.ones((h,w), np.float32)
+        
+        for holes in self.n_holes:
+            centre_y = np.random.randint(h)
+            centre_x = np.random.randint(w)
+            
+            y1 = np.clip(centre_y - self.length // 2, 0, h)
+            y2 = np.clip(centre_y + self.length // 2, 0, h)
+            x1 = np.clip(centre_x - self.length // 2, 0, w)
+            x2 = np.clip(centre_x + self.length // 2, 0, w)
+            
+            mask[y1:y2, x1:x2] = 0.
+        
+        mask = torch.from_numpy(mask)
+        mask = mask.expand_as(img)
+        img  = img * mask
+        
+        return img
