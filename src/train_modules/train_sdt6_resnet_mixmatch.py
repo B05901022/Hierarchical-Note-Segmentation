@@ -14,6 +14,8 @@ import torch.utils.data as data_utils
 import numpy as np
 import random
 
+from audio_augment import transform_method
+
 use_cuda = torch.cuda.is_available()
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, 
@@ -67,7 +69,11 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
-             transform_dict, # Cut-out, Frequency Masking, Pitch shift 
+             transform_dict={'cutout':{'n_holes':1, 'height':29, 'width':2}, 
+                             'freq_mask':False, # {'freq_mask_param':300}
+                             'time_mask':False, # {'time_mask_param':3}
+                             'pitchshift':2,
+                             }, # Cut-out, Frequency/Time Masking, Pitch shift 
              sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
     # labeled_data   shape: (10, 3, 522, 19)
     # labeled_label  shape: (10, 6)
@@ -104,17 +110,6 @@ def Mixmatch(labeled_data, labeled_label,
     
     return x_mix_data, x_mix_label, u_mix_data, u_mix_label
 
-def transform_method(transform_dict):
-    
-    # Cut-out, Frequency Masking, Pitch shift ... etc
-    
-    transform_list = []
-    
-    if 'cutout' in transform_dict:
-        transform_list.append(Cutout(*transform_dict['cutout']))
-    
-    return transforms.Compose(transform_list)
-
 def Sharpen(dist, T):
     sharpen_dist = dist
     for i in range(sharpen_dist.size(0)):
@@ -129,33 +124,3 @@ def Mixup(data, label,
     mixed_data  = lam*data  + (1-lam)*unlabel_data
     mixed_label = lam*label + (1-lam)*unlabel_label
     return mixed_data, mixed_label
-
-class CutOut(object):
-    '''
-    Better with normalized input
-    '''
-    def __init__(self, n_holes, length):
-        self.n_holes = n_holes
-        self.length  = length
-    def __call__(self, img):
-        h = img.size(1)
-        w = img.size(2)
-        
-        mask = np.ones((h,w), np.float32)
-        
-        for holes in self.n_holes:
-            centre_y = np.random.randint(h)
-            centre_x = np.random.randint(w)
-            
-            y1 = np.clip(centre_y - self.length // 2, 0, h)
-            y2 = np.clip(centre_y + self.length // 2, 0, h)
-            x1 = np.clip(centre_x - self.length // 2, 0, w)
-            x2 = np.clip(centre_x + self.length // 2, 0, w)
-            
-            mask[y1:y2, x1:x2] = 0.
-        
-        mask = torch.from_numpy(mask)
-        mask = mask.expand_as(img)
-        img  = img * mask
-        
-        return img
