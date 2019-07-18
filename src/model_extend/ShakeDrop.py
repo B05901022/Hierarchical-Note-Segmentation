@@ -49,8 +49,7 @@ class ShakeDrop(nn.Module):
         self.alpha  = alpha
     
     def forward(self, x):
-        return ShakeDropFunction.apply(x, self.training, p_drop=self.p_drop, 
-                                       alpharange=self.alpha)
+        return ShakeDropFunction.apply(x, self.training, self.p_drop, self.alpha)
 
 #######################################################################################
 
@@ -72,7 +71,7 @@ class BasicBlock(nn.Module):
         
         self.shakedrop  = shakedrop
         if self.shakedrop:
-            self.shakedrop_layer = ShakeDrop(p_shakedrop, [-1,1])
+            self.shakedrop_layer = ShakeDrop(p_drop=p_shakedrop, alpha=[-1,1])
         
     def forward(self, x):
         #print('downsample', self.downsample)
@@ -184,7 +183,7 @@ class PyramidNet_ShakeDrop(nn.Module):
             padding = 1
         return nn.Sequential(*layers)
  
-"""           
+"""      
 if __name__ == '__main__':
     from torchsummaryX import summary
     #import torchvision.models as models
@@ -196,7 +195,9 @@ if __name__ == '__main__':
     #resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)#nn.AvgPool2d(2)
     #resnet18 = resnet18.cuda()
     #summary(resnet18, torch.zeros(1,3,522,19).cuda())
-    model = PyramidNet_ShakeDrop().cuda()
+    
+    ### depth should be one of 20, 32, 44, 56, 110, 1202
+    model = PyramidNet_ShakeDrop(depth=44, shakedrop=True).cuda()
     summary(model, torch.zeros(1,3,522,19).cuda())
     
     #under (1,3,174,19)

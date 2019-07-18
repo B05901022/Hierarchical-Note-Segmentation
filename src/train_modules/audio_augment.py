@@ -21,18 +21,25 @@ def transform_method(transform_dict):
     
     transform_list = []
     
-    if 'pitchshift' in transform_dict:
+    try:
         if transform_dict['pitchshift'] != False:
-            transform_list.append(PitchShifting(*transform_dict['pitchshift']))
-    if 'cutout' in transform_dict:
+            transform_list.append(PitchShifting(**transform_dict['pitchshift']))
         if transform_dict['cutout'] != False:
-            transform_list.append(CutOut(*transform_dict['cutout']))
-    if 'freq_mask' in transform_dict:
+            transform_list.append(CutOut(**transform_dict['cutout']))
         if transform_dict['freq_mask'] != False:
-            transform_list.append(FrequencyMasking(*transform_dict['freq_mask']))
-    if 'time_mask' in transform_dict:
+            transform_list.append(FrequencyMasking(**transform_dict['freq_mask']))
         if transform_dict['time_mask'] != False:
-            transform_list.append(TimeMasking(*transform_dict['time_mask']))
+            transform_list.append(TimeMasking(**transform_dict['time_mask']))
+    except:
+        raise ValueError("""
+            transform_method() should contain a full dictionary with: 
+            transform_dict={\'cutout\'    :{\'n_holes\':[cutout holes], \'height\':[cutout height], \'width\':[cutout width]}, 
+                            \'freq_mask\' :{\'freq_mask_param\':[F parameter in SpecAugment]},
+                            \'time_mask\' :{\'time_mask_param\':[T parameter in SpecAugment]},
+                            \'pitchshift\':{\'shift_range\':2},
+                             }
+            for transforms unused, simply give a bool \'False\' for the dictionary key
+            """)
     
     return transforms.Compose(transform_list)
 
@@ -51,7 +58,7 @@ class CutOut(object):
         
         mask = np.ones((h,w), np.float32)
         
-        for holes in self.n_holes:
+        for holes in range(self.n_holes):
             centre_y = np.random.randint(h)
             centre_x = np.random.randint(w)
             

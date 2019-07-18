@@ -13,6 +13,7 @@ import torchvision.transforms as transforms
 import torch.utils.data as data_utils
 import numpy as np
 import random
+import math
 
 from audio_augment import transform_method
 
@@ -69,10 +70,12 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
-             transform_dict={'cutout':{'n_holes':1, 'height':29, 'width':2}, 
-                             'freq_mask':False, # {'freq_mask_param':300}
-                             'time_mask':False, # {'time_mask_param':3}
-                             'pitchshift':2,
+             curr_timestep,
+             total_timestep, TSA_k=6, TSA_schedule='linear', 
+             transform_dict={'cutout'    :{'n_holes':1, 'height':30, 'width':3}, 
+                             'freq_mask' :False, # {'freq_mask_param':300}
+                             'time_mask' :False, # {'time_mask_param':3}
+                             'pitchshift':{'shift_range':2},
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
              sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
     # labeled_data   shape: (10, 3, 522, 19)
@@ -82,6 +85,7 @@ def Mixmatch(labeled_data, labeled_label,
     curr_model = curr_model.eval() # avoid influencing gradient calculations
     
     transform  = transform_method(transform_dict)
+    tsa_detect = TSA(total_timestep, TSA_k, TSA_schedule)
     
     aug_x = transform(labeled_data, transform)
     aug_u = []
@@ -95,6 +99,11 @@ def Mixmatch(labeled_data, labeled_label,
             label += curr_model(aug_u_k)
     label /= augment_time
     # label shape: (10, 6)
+    
+    accept_label = tsa_detect(label, curr_timestep)
+    label = label[accept_label]
+    aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
+    
     label = Sharpen(label, sharpening_temp)
     
     stack_data  = torch.cat((aug_x, *aug_u), dim=0)
@@ -124,3 +133,21 @@ def Mixup(data, label,
     mixed_data  = lam*data  + (1-lam)*unlabel_data
     mixed_label = lam*label + (1-lam)*unlabel_label
     return mixed_data, mixed_label
+
+class TSA(object):
+    def __init__(self, total_timestep, k, schedule):
+        self.T = total_timestep
+        self.K = k # total catagories
+        if schedule == 'log':
+            self.schedule = lambda t: (1-math.e**(-5*t/self.T)) * (1-1./self.K) + 1./self.K
+        elif schedule == 'linear':
+            self.schedule = lambda t: t/self.T * (1-1./self.K) + 1./self.K
+        elif schedule == 'exp':
+            self.schedule = lambda t: math.e**(5*(t/self.T-1)) * (1-1./self.K) + 1./self.K
+        else:
+            raise ValueError("Only \'log\', \'linear\', \'exp\' are valid TSA type")
+    def __call__(self, label, t):
+        threshold = self.schedule(t)
+        false_tag = torch.gt(torch.max(label, dim=1)[0], threshold)
+        right_tag = [i for i in range(false_tag.size(0)) if false_tag[i] == 0]
+        return torch.Tensor(right_tag).long()
