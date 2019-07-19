@@ -86,7 +86,7 @@ class ResNet_ShakeDrop(nn.Module):
         self.relu_out= nn.ReLU(inplace=True)
         self.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
         #self.avgpool2= nn.AvgPool2d(kernel_size=(33,2), stride=1, padding=0)
-        self.fc_out  = nn.Linear(self.in_chs[-1], num_class) 
+        self.fc_out  = nn.Linear(self.in_chs[-1], num_class) #nn.Linear(self.in_chs[-1]*34, num_class)
         
         #output shape (batch, 6)
         
