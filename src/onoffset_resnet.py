@@ -17,7 +17,7 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
-from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop
+#from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
 
 #----------------------------
