@@ -16,7 +16,7 @@ FEAT_NUM1=9
 START_EPOCH=0
 END_EPOCH=80
 
-LOG_FILE="log/sdt6_resnet_${NORM}${WS}_l${HL1}h${HS1}b${BIDIR1}_e${END_EPOCH}b${BATCH}_${FEAT1}_sample.log"
+LOG_FILE="log/sdt6_resnet_shakedrop_${NORM}${WS}_l${HL1}h${HS1}b${BIDIR1}_e${END_EPOCH}b${BATCH}_${FEAT1}_sample.log"
 
 mkdir -p log
 
