@@ -8,7 +8,7 @@ Created on Fri Jul 19 14:24:23 2019
 import torch
 import torch.nn as nn
 import math
-from ShakeDrop import ShakeDrop
+from model_extend.ShakeDrop import ShakeDrop
 
 class PyramidBlock(nn.Module):
     
@@ -138,6 +138,97 @@ class PyramidNet_ShakeDrop(nn.Module):
             stride = 1
             padding = 1
         return nn.Sequential(*layers)
+    
+class PyramidNet_ShakeDrop_MaxPool(nn.Module):
+    
+    def __init__(self, conv1_in_channel=3, depth=20, alpha=270, num_class=6,
+                 shakedrop=False, block=PyramidBlock):
+        super(PyramidNet_ShakeDrop_MaxPool, self).__init__()
+        
+        if (depth-2) % 6 != 0:
+            raise ValueError('depth should be one of 20, 32, 44, 56, 110, 1202')
+        
+        self.in_ch     = 16
+        self.shakedrop = shakedrop
+        
+        # PyramidNet
+        n_units = (depth - 2) // 6
+        channel = lambda x: math.ceil( alpha * (x+1) / (3 * n_units) )
+        self.in_chs  = [self.in_ch] + [self.in_ch + channel(i) for i in range (n_units * 3)]
+        #print(self.in_chs)
+        
+        # Stochastic Depth
+        self.p_L = 0.5
+        linear_decay = lambda x: (1-self.p_L) * x / (3*n_units)
+        self.ps_shakedrop = [linear_decay(i) for i in range(3*n_units)]
+        
+        self.u_idx   = 0
+        
+        ### Model ###
+        
+        # input shape (batch, 3, 522, 19)
+        
+        self.conv1   = nn.Conv2d(conv1_in_channel, self.in_chs[0], kernel_size=(7,7),
+                               stride=(2,2), padding=(3,3), bias=False)
+        self.bn1     = nn.BatchNorm2d(self.in_chs[0])
+        self.relu1   = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        self.layer1  = self._make_layer(n_units, block, 1, (1,1))
+        self.layer2  = self._make_layer(n_units, block, 2, (0,1))
+        self.layer3  = self._make_layer(n_units, block, 2, (1,0))
+        
+        self.bn_out  = nn.BatchNorm2d(self.in_chs[-1])
+        self.relu_out= nn.ReLU(inplace=True)
+        self.avgpool = nn.AvgPool2d(kernel_size=(3,3), stride=(2,2), padding=1)
+        self.fc_out  = nn.Linear(self.in_chs[-1]*33, num_class) ### *11 for 174
+        
+        #output shape (batch, 6)
+        
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                # MSRA initializer
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                m.bias.data.zero_()
+                
+    def forward(self, x):
+        print('1',x.shape)
+        h = self.relu1(self.bn1(self.conv1(x)))
+        h = self.maxpool(h)
+        print('2',h.shape)
+        h = self.layer1(h)
+        print('3',h.shape)
+        print('==================================================')
+        h = self.layer2(h)
+        print('4',h.shape)
+        print('==================================================')
+        h = self.layer3(h)
+        print('5',h.shape)
+        print('==================================================')
+        h = self.relu_out(self.bn_out(h))
+        print('6',h.shape)
+        h = self.avgpool(h)
+        print('7',h.shape)
+        h = h.view(h.size(0), -1)
+        print('8',h.shape)
+        h = self.fc_out(h)
+        print('9',h.shape)
+        return h
+    
+    def _make_layer(self, n_units, block, stride=1, padding=1):
+        layers = []
+        for i in range(int(n_units)):
+            layers.append(block(self.in_chs[self.u_idx], self.in_chs[self.u_idx+1],
+                                stride, padding, self.shakedrop, self.ps_shakedrop[self.u_idx]))
+            self.u_idx += 1
+            stride = 1
+            padding = 1
+        return nn.Sequential(*layers)
  
 """
 if __name__ == '__main__':
@@ -153,7 +244,7 @@ if __name__ == '__main__':
     #summary(resnet18, torch.zeros(1,3,522,19).cuda())
     
     ### depth should be one of 20, 32, 44, 56, 110, 1202
-    model = PyramidNet_ShakeDrop(depth=20, shakedrop=True, alpha=270).cuda()
+    model = PyramidNet_ShakeDrop_MaxPool(depth=20, shakedrop=True, alpha=270).cuda()
     summary(model, torch.zeros(1,3,522,19).cuda())
     
     #under (1,3,174,19)
