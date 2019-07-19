@@ -8,7 +8,7 @@ Created on Fri Jul 19 14:24:23 2019
 import torch
 import torch.nn as nn
 import math
-from model_extend.ShakeDrop import ShakeDrop
+from ShakeDrop import ShakeDrop
 
 class PyramidBlock(nn.Module):
     
@@ -155,7 +155,7 @@ class PyramidNet_ShakeDrop_MaxPool(nn.Module):
         n_units = (depth - 2) // 6
         channel = lambda x: math.ceil( alpha * (x+1) / (3 * n_units) )
         self.in_chs  = [self.in_ch] + [self.in_ch + channel(i) for i in range (n_units * 3)]
-        print(self.in_chs)
+        #print(self.in_chs)
         
         # Stochastic Depth
         self.p_L = 0.5

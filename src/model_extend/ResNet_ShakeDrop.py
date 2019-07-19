@@ -8,7 +8,7 @@ Created on Fri Jul 19 14:27:12 2019
 import torch
 import torch.nn as nn
 import math
-from ShakeDrop import ShakeDrop
+from model_extend.ShakeDrop import ShakeDrop
 
 class ResBlock(nn.Module):
     
