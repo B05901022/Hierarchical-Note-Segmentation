@@ -95,7 +95,7 @@ class BasicBlock(nn.Module):
 
 class PyramidNet_ShakeDrop(nn.Module):
     
-    def __init__(self, conv1_in_channel=3, depth=44, alpha=270, num_class=6,
+    def __init__(self, conv1_in_channel=3, depth=20, alpha=270, num_class=6,
                  shakedrop=False, block=BasicBlock):
         super(PyramidNet_ShakeDrop, self).__init__()
         
@@ -183,7 +183,7 @@ class PyramidNet_ShakeDrop(nn.Module):
             padding = 1
         return nn.Sequential(*layers)
  
-"""      
+""" 
 if __name__ == '__main__':
     from torchsummaryX import summary
     #import torchvision.models as models
@@ -197,7 +197,7 @@ if __name__ == '__main__':
     #summary(resnet18, torch.zeros(1,3,522,19).cuda())
     
     ### depth should be one of 20, 32, 44, 56, 110, 1202
-    model = PyramidNet_ShakeDrop(depth=44, shakedrop=True).cuda()
+    model = PyramidNet_ShakeDrop(depth=20, shakedrop=True, alpha=270).cuda()
     summary(model, torch.zeros(1,3,522,19).cuda())
     
     #under (1,3,174,19)

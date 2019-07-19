@@ -17,6 +17,8 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
+from model_extend.ShakeDrop import PyramidNet_ShakeDrop
+
 #----------------------------
 # Parser
 #----------------------------
@@ -112,12 +114,15 @@ train_loader = data_utils.DataLoader(
     shuffle=False)
 
 # load resnet50
+"""
 resnet18 = models.resnet18(pretrained=False)
 num_ftrs = resnet18.fc.in_features
 resnet18.fc = nn.Linear(num_ftrs, OUTPUT_SIZE)
 num_fout = resnet18.conv1.out_channels
 resnet18.conv1 = nn.Conv2d(int(args.feat_num1//3), num_fout, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
+"""
+resnet18 = PyramidNet_ShakeDrop(depth=20, shakedrop=True, alpha=270)
 
 #----------------------------
 # Model Initialize
