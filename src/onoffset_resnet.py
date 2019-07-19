@@ -18,6 +18,7 @@ import sys
 from argparse import ArgumentParser
 
 from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop
+from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
 
 #----------------------------
 # Parser
@@ -122,7 +123,7 @@ num_fout = resnet18.conv1.out_channels
 resnet18.conv1 = nn.Conv2d(int(args.feat_num1//3), num_fout, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 """
-resnet18 = PyramidNet_ShakeDrop(depth=20, shakedrop=True, alpha=270)
+resnet18 = ResNet_ShakeDrop(depth=18, shakedrop=True)
 
 #----------------------------
 # Model Initialize
