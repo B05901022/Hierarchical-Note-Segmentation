@@ -17,6 +17,8 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
+device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+
 #from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
 
@@ -103,10 +105,10 @@ with open(on_data_file, 'r') as fd1:
         #off_data_np = off_data_np[:min_row].reshape((1,-1))
         on_ans_np = on_ans_np[:min_row].reshape((1,-1))
         #off_ans_np = off_ans_np[:min_row].reshape((1,-1))
-        on_data = torch.from_numpy(on_data_np).type(torch.FloatTensor).cuda()
-        #off_data = torch.from_numpy(off_data_np).type(torch.FloatTensor).cuda()
-        on_ans = torch.from_numpy(on_ans_np).type(torch.FloatTensor).cuda()
-        #off_ans = torch.from_numpy(off_ans_np).type(torch.LongTensor).cuda()
+        on_data = torch.from_numpy(on_data_np).type(torch.FloatTensor).to(device)
+        #off_data = torch.from_numpy(off_data_np).type(torch.FloatTensor).to(device)
+        on_ans = torch.from_numpy(on_ans_np).type(torch.FloatTensor).to(device)
+        #off_ans = torch.from_numpy(off_ans_np).type(torch.LongTensor).to(device)
 
 #train data
 train_loader = data_utils.DataLoader(
@@ -136,7 +138,7 @@ else:
     on_note_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(on_dec_model_train_file))
 
-on_note_decoder.cuda()
+on_note_decoder.to(device)
 
 note_decoders = [on_note_decoder]
 
@@ -162,7 +164,7 @@ for epoch in range(EPOCH):
     loss_count = 0
     for step, xys in enumerate(train_loader):                 # gives batch data
         b_x1 = xys[0].contiguous() # reshape x to (batch, C, feat_size, time_frame)
-        b_y1 = Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1, OUTPUT_SIZE)).cuda() # batch y
+        b_y1 = Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1, OUTPUT_SIZE)).to(device) # batch y
         # b_x1 shape: (1,3,522,1290)
         # b_y1 shape: (1,1290,6)
 

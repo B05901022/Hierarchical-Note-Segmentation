@@ -8,6 +8,7 @@ import numpy as np
 import random
 
 use_cuda = torch.cuda.is_available()
+device   = torch.device('cuda:2' if use_cuda else 'cpu')
 
 def train_resnet_4loss(input_t, target_Var, decoders, dec_opts, 
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k=3):
@@ -84,7 +85,7 @@ def train_resnet_2loss(input_t, target_Var, decoders, dec_opts,
         if BATCH_SIZE*step > k and BATCH_SIZE*step < input_time_step - (k+1) - BATCH_SIZE:
 
             input_Var = Variable(torch.stack([ input_t[0, :, :, BATCH_SIZE*step+i-k:BATCH_SIZE*step+i-k+window_size]\
-                           for i in range(BATCH_SIZE)], dim=0)).cuda()
+                           for i in range(BATCH_SIZE)], dim=0)).to(device)
 
             onDecOut4 = onDec(input_Var)
             onDecOut1 = nn_softmax(onDecOut4[:, :2]) # onset out
@@ -127,7 +128,7 @@ def train_resnet_sdtloss(input_t, target_Var, decoders, dec_opts,
         if BATCH_SIZE*step > k and BATCH_SIZE*step < input_time_step - (k+1) - BATCH_SIZE:
 
             input_Var = Variable(torch.stack([ input_t[0, :, :, BATCH_SIZE*step+i-k:BATCH_SIZE*step+i-k+window_size]\
-                           for i in range(BATCH_SIZE)], dim=0)).cuda()
+                           for i in range(BATCH_SIZE)], dim=0)).to(device)
 
             onDecOut3 = onDec(input_Var)
             onDecOut3 = nn_softmax(onDecOut3) # S, D, T
@@ -175,7 +176,7 @@ def train_resnet_2model(input_t, target_Var, decoders, dec_opts,
         if BATCH_SIZE*step > k and BATCH_SIZE*step < input_time_step - (k+1) - BATCH_SIZE:
 
             input_Var = Variable(torch.stack([ input_t[0, :, :, BATCH_SIZE*step+i-k:BATCH_SIZE*step+i-k+window_size]\
-                           for i in range(BATCH_SIZE)], dim=0)).cuda()
+                           for i in range(BATCH_SIZE)], dim=0)).to(device)
 
             onDecOut_on = onDec(input_Var)
             onDecOut_on = nn_softmax(onDecOut_on[:, :2]) # onset out
