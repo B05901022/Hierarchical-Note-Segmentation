@@ -48,7 +48,7 @@ smooth_file_name = "output/sdt6_resnet50_est/"+str(sys.argv[1])+"_sm_test"
 
 # Plot P
 pitch_file_name = "pitch/ISMIR2014/"+str(sys.argv[1])+"_P"
-est_file_name = "output/sdt6_resnet50_est/"+str(sys.argv[1])+"_test"
+est_file_name = "output/sdt6_resnet_est/"+str(sys.argv[1])+"_test"
 ref_file_name = "ans/ISMIR2014_ans/"+str(sys.argv[1])+".GroundTruth"
 exp_file_name = "Tony_note/"+str(sys.argv[1])+".csv"
 Z_file_name = "data/ISMIR2014_note/Z/"+str(sys.argv[1])+"_Z"
