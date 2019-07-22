@@ -541,7 +541,8 @@ for step, xys in enumerate(input_loader):                 # gives batch data
             predict_on_notes.append([0.0 for j in range(OUTPUT_SIZE)])
 
     predict_on_notes_np = np.ndarray(shape=(len(predict_on_notes), OUTPUT_SIZE), dtype=float, buffer=np.array(predict_on_notes))
-    print(predict_on_notes_np)
+    for i in range(predict_on_notes_np.shape[0]*0.01):
+        print(str(i),predict_on_notes_np[i])
     #onset_times, probseq_on_np = Smooth_prediction(predict_on_notes_np, THRESHOlD) # list of onset secs, ndarray
     #offset_times, probseq_off_np = Smooth_prediction(predict_off_notes_np, THRESHOlD) # list of onset secs, ndarray
     # Modify 1
