@@ -526,9 +526,11 @@ for step, xys in enumerate(input_loader):                 # gives batch data
             onDecOut3 = nn_softmax(onDecOut6[:, 4:])
             
             for i in range(BATCH_SIZE):
-                predict_on_note =  [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy()[0] for j in range(2) ]
-                predict_on_note += [ onDecOut2.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy()[0] for j in range(2) ]
-                predict_on_note += [ onDecOut3.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy()[0] for j in range(2) ]
+                predict_on_note =  [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j] for j in range(2) ]
+                predict_on_note += [ onDecOut2.view(BATCH_SIZE, 1, 2).data[i][0][j] for j in range(2) ]
+                predict_on_note += [ onDecOut3.view(BATCH_SIZE, 1, 2).data[i][0][j] for j in range(2) ]
+                print(predict_on_note)
+                sss
                 predict_on_notes.append(predict_on_note)
 
             #####################################
