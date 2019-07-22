@@ -17,6 +17,8 @@ from statistics import median
 
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
 
+device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+
 #----------------------------
 # Smoothing Process
 #----------------------------
@@ -428,7 +430,7 @@ with open(data_file, 'r') as fd:
         ans_np = ans_np.reshape((ans_np.shape[0],2))
         onset_ans_np = ans_np[:, 0].reshape((ans_np.shape[0],))
 
-        data = torch.from_numpy(data_np).type(torch.FloatTensor).cuda()
+        data = torch.from_numpy(data_np).type(torch.FloatTensor).to(device)
 
 with open(p_file, 'r') as fp:
     p_np = np.loadtxt(fp)
@@ -494,7 +496,7 @@ onDec = ResNet_ShakeDrop(depth=18, shakedrop=True)
 
 onDec.load_state_dict(torch.load(on_dec_model_file))
 
-onDec.cuda()
+onDec.to(device)
 
 #----------------------------
 # Evaluation
