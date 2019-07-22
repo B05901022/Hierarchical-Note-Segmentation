@@ -519,7 +519,6 @@ for step, xys in enumerate(input_loader):                 # gives batch data
                            for i in range(BATCH_SIZE)], dim=0))
 
             onDecOut6 = onDec(input_Var)
-            print(onDecOut6)
             onDecOut1 = nn_softmax(onDecOut6[:, :2])
             onDecOut2 = nn_softmax(onDecOut6[:, 2:4])
             onDecOut3 = nn_softmax(onDecOut6[:, 4:])
@@ -542,7 +541,7 @@ for step, xys in enumerate(input_loader):                 # gives batch data
             predict_on_notes.append([0.0 for j in range(OUTPUT_SIZE)])
 
     predict_on_notes_np = np.ndarray(shape=(len(predict_on_notes), OUTPUT_SIZE), dtype=float, buffer=np.array(predict_on_notes))
-
+    print(predict_on_notes_np)
     #onset_times, probseq_on_np = Smooth_prediction(predict_on_notes_np, THRESHOlD) # list of onset secs, ndarray
     #offset_times, probseq_off_np = Smooth_prediction(predict_off_notes_np, THRESHOlD) # list of onset secs, ndarray
     # Modify 1
