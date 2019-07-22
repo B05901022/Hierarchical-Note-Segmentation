@@ -73,6 +73,10 @@ def Smooth_sdt6(predict_sdt, threshold=0.5):
     
     for num in range(predict_sdt.shape[0]):
         if num > 1 and num < predict_sdt.shape[0]-2:
+            print('sSeq type',   type(predict_sdt[num][0]))
+            print('dSeq type',   type(predict_sdt[num][1]))
+            print('onSeq type',  type(np.dot(predict_sdt[num-2:num+3, 3], Filter) / 2.5))
+            print('offSeq type', type(np.dot(predict_sdt[num-2:num+3, 5], Filter) / 2.5))
             sSeq.append(predict_sdt[num][0])
             dSeq.append(predict_sdt[num][1])
             onSeq.append(np.dot(predict_sdt[num-2:num+3, 3], Filter) / 2.5)
@@ -82,11 +86,7 @@ def Smooth_sdt6(predict_sdt, threshold=0.5):
             sSeq.append(predict_sdt[num][0])
             dSeq.append(predict_sdt[num][1])
             onSeq.append(predict_sdt[num][3])
-            offSeq.append(predict_sdt[num][5])
-    print('sSeq',sSeq[:100])
-    print('dSeq',dSeq[:100])
-    print('onSeq',onSeq[:100])
-    print('offSeq',offSeq[:100])    
+            offSeq.append(predict_sdt[num][5])   
     
     ##############################
     # Peak strategy
@@ -221,10 +221,6 @@ def Smooth_sdt6(predict_sdt, threshold=0.5):
     #est_intervals = Naive_match(onpeaks_np, offpeaks_np)
 
     # Modify 1
-    print('ss',len(sSeq))
-    print('ds',len(dSeq))
-    print('os',len(onSeq))
-    print('fs',len(offSeq))
     sSeq_np = np.ndarray(shape=(len(sSeq),), dtype=float, buffer=np.array(sSeq))
     dSeq_np = np.ndarray(shape=(len(dSeq),), dtype=float, buffer=np.array(dSeq))
     onSeq_np = np.ndarray(shape=(len(onSeq),), dtype=float, buffer=np.array(onSeq))
@@ -551,9 +547,6 @@ for step, xys in enumerate(input_loader):                 # gives batch data
             predict_on_notes.append([np.array(0, dtype=np.float32) for j in range(OUTPUT_SIZE)])
     
     predict_on_notes_np = np.ndarray(shape=(len(predict_on_notes), OUTPUT_SIZE), dtype=np.float32, buffer=np.array(predict_on_notes))
-    for i in predict_on_notes_np:
-        print(i)
-    print('#######')
     #onset_times, probseq_on_np = Smooth_prediction(predict_on_notes_np, THRESHOlD) # list of onset secs, ndarray
     #offset_times, probseq_off_np = Smooth_prediction(predict_off_notes_np, THRESHOlD) # list of onset secs, ndarray
     # Modify 1
