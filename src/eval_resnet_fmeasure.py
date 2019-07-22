@@ -86,7 +86,7 @@ def Smooth_sdt6(predict_sdt, threshold=0.5):
     print('sSeq',sSeq[:100])
     print('dSeq',dSeq[:100])
     print('onSeq',onSeq[:100])
-    print('offSeq',offSeq[:100])
+    print('offSeq',offSeq[:100])    
     
     ##############################
     # Peak strategy
@@ -221,6 +221,10 @@ def Smooth_sdt6(predict_sdt, threshold=0.5):
     #est_intervals = Naive_match(onpeaks_np, offpeaks_np)
 
     # Modify 1
+    print('ss',len(sSeq))
+    print('ds',len(dSeq))
+    print('os',len(onSeq))
+    print('fs',len(offSeq))
     sSeq_np = np.ndarray(shape=(len(sSeq),), dtype=float, buffer=np.array(sSeq))
     dSeq_np = np.ndarray(shape=(len(dSeq),), dtype=float, buffer=np.array(dSeq))
     onSeq_np = np.ndarray(shape=(len(onSeq),), dtype=float, buffer=np.array(onSeq))
