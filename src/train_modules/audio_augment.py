@@ -105,19 +105,41 @@ class PitchShifting(object):
     def __init__(self, shift_range):
         self.shift_range = shift_range
     def __call__(self, img):
-        f_range   = img.size(1)
-        shift     = np.random.uniform(0, self.shift_range)
+        f_range   = img.size(1) // 3
+        shift     = np.random.randint(-self.shift_range, self.shift_range+1)
         shift_img = torch.zeros(img.size())
-        up_bound  = math.ceil(f_range * shift)
-        for f in range(f_range):
-            shift_to = int(f/shift)
-            if shift_to < f_range:
-                shift_img[:,f] = img[:,shift_to]
+        for feat in range(3):
+            for f in range(f_range*feat, f_range*(feat+1)):
+                if f-shift >= f_range*feat and f-shift < f_range*(feat+1):
+                    shift_img[:,f] = img[:,f-shift]
         shift_img = shift_img.float()
-        shift_img = (shift_img-torch.mean(shift_img))/torch.std(shift_img)
-        shift_img[:,up_bound:,:] = 0.0
+        """
+        if torch.std(shift_img) != 0:
+            shift_img = (shift_img-torch.mean(shift_img))/torch.std(shift_img)
+        else:
+            shift_img = torch.zeros(img.size())
+        """
         return shift_img
     
+class AddNoise(object):
+    def __init__(self, noise_type, noise_size):
+        self.noise_type = noise_type
+        self.noise_size = torch.Tensor([noise_size])[0]
+    def __call__(self, img):
+        if self.noise_type == 'pink':
+            f_range = img.size(1) // 3
+            gen_noise = np.random.uniform(0, f_range, size=img.size())
+            for feat in range(3):
+                for f in range(f_range*feat, f_range*(feat+1)):
+                    gen_noise[:,f] = np.log(gen_noise[:,f])-(f%f_range)
+            gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
+            gen_noise = torch.from_numpy(gen_noise).float()
+            return img + self.noise_size*gen_noise
+        elif self.noise_type == 'white':
+            gen_noise = np.random.uniform(size=img.size())
+            gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
+            gen_noise = torch.from_numpy(gen_noise).float()
+            return img + self.noise_size*gen_noise
 ################################################################################
 # Resources: 
 #   https://www.kaggle.com/huseinzol05/sound-augmentation-librosa

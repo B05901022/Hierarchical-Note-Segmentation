@@ -71,11 +71,11 @@ def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
              curr_timestep,
-             total_timestep, TSA_k=6, TSA_schedule='linear', 
+             total_timestep, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :{'n_holes':1, 'height':30, 'width':3}, 
                              'freq_mask' :False, # {'freq_mask_param':300}
                              'time_mask' :False, # {'time_mask_param':3}
-                             'pitchshift':{'shift_range':2},
+                             'pitchshift':{'shift_range':48},
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
              sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
     # labeled_data   shape: (10, 3, 522, 19)
