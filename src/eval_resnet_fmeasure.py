@@ -498,6 +498,8 @@ onDec.load_state_dict(torch.load(on_dec_model_file))
 
 onDec.to(device)
 
+onDec = onDec.eval()
+
 #----------------------------
 # Evaluation
 #----------------------------
@@ -522,7 +524,6 @@ for step, xys in enumerate(input_loader):                 # gives batch data
             onDecOut1 = nn_softmax(onDecOut6[:, :2])
             onDecOut2 = nn_softmax(onDecOut6[:, 2:4])
             onDecOut3 = nn_softmax(onDecOut6[:, 4:])
-            print(onDecOut1)
             
             for i in range(BATCH_SIZE):
                 predict_on_note = [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j] for j in range(2) ]
