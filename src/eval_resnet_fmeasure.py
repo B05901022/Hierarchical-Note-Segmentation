@@ -519,6 +519,7 @@ for step, xys in enumerate(input_loader):                 # gives batch data
                            for i in range(BATCH_SIZE)], dim=0))
 
             onDecOut6 = onDec(input_Var)
+            print(onDecOut6)
             onDecOut1 = nn_softmax(onDecOut6[:, :2])
             onDecOut2 = nn_softmax(onDecOut6[:, 2:4])
             onDecOut3 = nn_softmax(onDecOut6[:, 4:])
