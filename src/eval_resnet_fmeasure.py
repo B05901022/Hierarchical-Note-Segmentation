@@ -526,9 +526,9 @@ for step, xys in enumerate(input_loader):                 # gives batch data
             onDecOut3 = nn_softmax(onDecOut6[:, 4:])
             
             for i in range(BATCH_SIZE):
-                predict_on_note = [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j] for j in range(2) ]
-                predict_on_note += [ onDecOut2.view(BATCH_SIZE, 1, 2).data[i][0][j] for j in range(2) ]
-                predict_on_note += [ onDecOut3.view(BATCH_SIZE, 1, 2).data[i][0][j] for j in range(2) ]
+                predict_on_note =  [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy()[0] for j in range(2) ]
+                predict_on_note += [ onDecOut2.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy()[0] for j in range(2) ]
+                predict_on_note += [ onDecOut3.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy()[0] for j in range(2) ]
                 predict_on_notes.append(predict_on_note)
 
             #####################################
@@ -542,11 +542,6 @@ for step, xys in enumerate(input_loader):                 # gives batch data
         else:
             predict_on_notes.append([0.0 for j in range(OUTPUT_SIZE)])
     
-    for i in predict_on_notes:
-        print(i)
-    
-    print(len(predict_on_notes))
-    print(OUTPUT_SIZE)
     predict_on_notes_np = np.ndarray(shape=(len(predict_on_notes), OUTPUT_SIZE), dtype=float, buffer=np.array(predict_on_notes))
     #onset_times, probseq_on_np = Smooth_prediction(predict_on_notes_np, THRESHOlD) # list of onset secs, ndarray
     #offset_times, probseq_off_np = Smooth_prediction(predict_off_notes_np, THRESHOlD) # list of onset secs, ndarray
