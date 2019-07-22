@@ -46,7 +46,7 @@ class PyramidBlock(nn.Module):
         pad_zero = torch.autograd.Variable(torch.zeros(h0.size(0),
                                                        h.size(1)-h0.size(1),
                                                        h0.size(2),
-                                                       h0.size(3)).float()).to(device)
+                                                       h0.size(3)).float().to(device))
         #print('pad_zero', pad_zero.shape)
         h0  = torch.cat([h0, pad_zero], dim=1)
         #print('h0', h0.shape)
@@ -177,13 +177,13 @@ class PyramidNet_ShakeDrop_MaxPool(nn.Module):
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         
         self.layer1  = self._make_layer(n_units, block, 1, (1,1))
-        self.layer2  = self._make_layer(n_units, block, 2, (0,1))
-        self.layer3  = self._make_layer(n_units, block, 2, (1,0))
+        self.layer2  = self._make_layer(n_units, block, 2, (0,0))
+        self.layer3  = self._make_layer(n_units, block, 2, (0,1))
         
         self.bn_out  = nn.BatchNorm2d(self.in_chs[-1])
         self.relu_out= nn.ReLU(inplace=True)
-        self.avgpool = nn.AvgPool2d(kernel_size=(3,3), stride=(2,2), padding=1)
-        self.fc_out  = nn.Linear(self.in_chs[-1]*33, num_class) ### *11 for 174
+        self.avgpool = nn.AvgPool2d(kernel_size=(32,1))#nn.AvgPool2d(kernel_size=(3,3), stride=(2,2), padding=1)
+        self.fc_out  = nn.Linear(self.in_chs[-1], num_class) ### *11 for 174
         
         #output shape (batch, 6)
         
@@ -199,27 +199,27 @@ class PyramidNet_ShakeDrop_MaxPool(nn.Module):
                 m.bias.data.zero_()
                 
     def forward(self, x):
-        print('1',x.shape)
+        #print('1',x.shape)
         h = self.relu1(self.bn1(self.conv1(x)))
         h = self.maxpool(h)
-        print('2',h.shape)
+        #print('2',h.shape)
         h = self.layer1(h)
-        print('3',h.shape)
-        print('==================================================')
+        #print('3',h.shape)
+        #print('==================================================')
         h = self.layer2(h)
-        print('4',h.shape)
-        print('==================================================')
+        #print('4',h.shape)
+        #print('==================================================')
         h = self.layer3(h)
-        print('5',h.shape)
-        print('==================================================')
+        #print('5',h.shape)
+        #print('==================================================')
         h = self.relu_out(self.bn_out(h))
-        print('6',h.shape)
+        #print('6',h.shape)
         h = self.avgpool(h)
-        print('7',h.shape)
+        #print('7',h.shape)
         h = h.view(h.size(0), -1)
-        print('8',h.shape)
+        #print('8',h.shape)
         h = self.fc_out(h)
-        print('9',h.shape)
+        #print('9',h.shape)
         return h
     
     def _make_layer(self, n_units, block, stride=1, padding=1):
@@ -246,8 +246,9 @@ if __name__ == '__main__':
     #summary(resnet18, torch.zeros(1,3,522,19).cuda())
     
     ### depth should be one of 20, 32, 44, 56, 110, 1202
-    model = PyramidNet_ShakeDrop_MaxPool(depth=20, shakedrop=True, alpha=270).cuda()
-    summary(model, torch.zeros(1,3,522,19).cuda())
+    ### alpha can be 48, 84, 270
+    model = PyramidNet_ShakeDrop_MaxPool(depth=44, shakedrop=True, alpha=270).to(device)
+    summary(model, torch.zeros(1,3,522,19).to(device))
     
     #under (1,3,174,19)
     #resnet18 params:11.18573M, Mult-Adds:171.71M
