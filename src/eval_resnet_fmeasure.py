@@ -83,6 +83,10 @@ def Smooth_sdt6(predict_sdt, threshold=0.5):
             dSeq.append(predict_sdt[num][1])
             onSeq.append(predict_sdt[num][3])
             offSeq.append(predict_sdt[num][5])
+    print('sSeq',sSeq[:100])
+    print('dSeq',dSeq[:100])
+    print('onSeq',onSeq[:100])
+    print('offSeq',offSeq[:100])
     
     ##############################
     # Peak strategy
@@ -526,7 +530,7 @@ for step, xys in enumerate(input_loader):                 # gives batch data
             onDecOut3 = nn_softmax(onDecOut6[:, 4:])
             
             for i in range(BATCH_SIZE):
-                predict_on_note =  [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]
+                predict_on_note = [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]
                 predict_on_note += [ onDecOut2.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]
                 predict_on_note += [ onDecOut3.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]
                 predict_on_notes.append(predict_on_note)
@@ -535,14 +539,17 @@ for step, xys in enumerate(input_loader):                 # gives batch data
 
         elif BATCH_SIZE*step <= k:
             for i in range(BATCH_SIZE):
-                predict_on_notes.append([np.array(0.0,dtype=np.float32) for j in range(OUTPUT_SIZE)])
+                predict_on_notes.append([np.array(0, dtype=np.float32) for j in range(OUTPUT_SIZE)])
         elif BATCH_SIZE*step >= input_time_step - (k+1) - BATCH_SIZE:
             for i in range(BATCH_SIZE):
-                predict_on_notes.append([np.array(0.0,dtype=np.float32) for j in range(OUTPUT_SIZE)])
+                predict_on_notes.append([np.array(0, dtype=np.float32) for j in range(OUTPUT_SIZE)])
         else:
-            predict_on_notes.append([np.array(0.0,dtype=np.float32) for j in range(OUTPUT_SIZE)])
+            predict_on_notes.append([np.array(0, dtype=np.float32) for j in range(OUTPUT_SIZE)])
     
     predict_on_notes_np = np.ndarray(shape=(len(predict_on_notes), OUTPUT_SIZE), dtype=np.float32, buffer=np.array(predict_on_notes))
+    for i in predict_on_notes_np:
+        print(i)
+    print('#######')
     #onset_times, probseq_on_np = Smooth_prediction(predict_on_notes_np, THRESHOlD) # list of onset secs, ndarray
     #offset_times, probseq_off_np = Smooth_prediction(predict_off_notes_np, THRESHOlD) # list of onset secs, ndarray
     # Modify 1
