@@ -15,6 +15,8 @@ from sklearn.externals import joblib
 from sklearn.mixture import GaussianMixture
 from statistics import median
 
+from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
+
 #----------------------------
 # Smoothing Process
 #----------------------------
@@ -478,6 +480,7 @@ input_loader = data_utils.DataLoader(
 # ATTENTION MODEL
 #####################################
 # load resnet50
+"""
 resnet18 = models.resnet18(pretrained=False)
 num_ftrs = resnet18.fc.in_features
 resnet18.fc = nn.Linear(num_ftrs, OUTPUT_SIZE)
@@ -486,6 +489,8 @@ resnet18.conv1 = nn.Conv2d(int(args.feat_num//3), num_fout, kernel_size=(7, 7), 
 resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 
 onDec = resnet18
+"""
+onDec = ResNet_ShakeDrop(depth=18, shakedrop=True)
 
 onDec.load_state_dict(torch.load(on_dec_model_file))
 
