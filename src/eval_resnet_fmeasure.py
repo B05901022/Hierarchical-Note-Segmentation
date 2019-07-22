@@ -73,18 +73,14 @@ def Smooth_sdt6(predict_sdt, threshold=0.5):
     
     for num in range(predict_sdt.shape[0]):
         if num > 1 and num < predict_sdt.shape[0]-2:
-            print('sSeq type',   type(predict_sdt[num][0]))
-            print('dSeq type',   type(predict_sdt[num][1]))
-            print('onSeq type',  type(np.dot(predict_sdt[num-2:num+3, 3], Filter) / 2.5))
-            print('offSeq type', type(np.dot(predict_sdt[num-2:num+3, 5], Filter) / 2.5))
-            sSeq.append(predict_sdt[num][0])
-            dSeq.append(predict_sdt[num][1])
+            sSeq.append(predict_sdt[num][0].astype(np.float64))
+            dSeq.append(predict_sdt[num][1].astype(np.float64))
             onSeq.append(np.dot(predict_sdt[num-2:num+3, 3], Filter) / 2.5)
             offSeq.append(np.dot(predict_sdt[num-2:num+3, 5], Filter) / 2.5)
 
         else:
-            sSeq.append(predict_sdt[num][0])
-            dSeq.append(predict_sdt[num][1])
+            sSeq.append(predict_sdt[num][0].astype(np.float64))
+            dSeq.append(predict_sdt[num][1].astype(np.float64))
             onSeq.append(predict_sdt[num][3])
             offSeq.append(predict_sdt[num][5])   
     
