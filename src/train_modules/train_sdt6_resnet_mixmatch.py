@@ -76,6 +76,7 @@ def Mixmatch(labeled_data, labeled_label,
                              'freq_mask' :False, # {'freq_mask_param':300}
                              'time_mask' :False, # {'time_mask_param':3}
                              'pitchshift':{'shift_range':48},
+                             'addnoise'  :{'noise_type':'pink', 'noise_size'=0.01}, 
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
              sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
     # labeled_data   shape: (10, 3, 522, 19)

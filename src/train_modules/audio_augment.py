@@ -24,6 +24,8 @@ def transform_method(transform_dict):
     try:
         if transform_dict['pitchshift'] != False:
             transform_list.append(PitchShifting(**transform_dict['pitchshift']))
+        if transform_dict['addnoise'] != False:
+            transform_list.append(AddNoise(**transform_dict['addnoise']))
         if transform_dict['cutout'] != False:
             transform_list.append(CutOut(**transform_dict['cutout']))
         if transform_dict['freq_mask'] != False:
@@ -124,7 +126,7 @@ class PitchShifting(object):
 class AddNoise(object):
     def __init__(self, noise_type, noise_size):
         self.noise_type = noise_type
-        self.noise_size = torch.Tensor([noise_size])[0]
+        self.noise_size = torch.FloatTensor(1).uniform_(0,noise_size)[0]
     def __call__(self, img):
         if self.noise_type == 'pink':
             f_range = img.size(1) // 3
@@ -140,6 +142,39 @@ class AddNoise(object):
             gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
             gen_noise = torch.from_numpy(gen_noise).float()
             return img + self.noise_size*gen_noise
+        
+class Clipping(object):
+    '''
+    Not yet correct...
+    '''
+    def __init__(self, threshold, clip_ratio, hard_clip = False):
+        self.clip_ratio = clip_ratio # not sure
+        self.hard_clip  = hard_clip
+        self.threshold  = threshold
+        
+        #freq_dist  = np.log(1000/80)/174
+        #freq_range = [80 * np.e ** (freq_dist * i) for i in range(174)]
+        #self.idx_dict  = {i : [np.clip(np.round(np.log(freq_range[i]*(2*n+3)/80)/freq_dist).astype(int),0,173) for n in range((math.floor(1000/freq_range[i])-3)//2 + 1) if freq_range[i]*(2*n+3) < 1000] for i in range(len(freq_range))}
+        
+        # really ugly, but means the harmonic indices of each frequency band index
+        self.idx_dict = {i : [np.clip(np.round(np.log(2*n+3)/np.log(12.5)*174 + i).astype(int),0,173) for n in range( (math.floor(12.5**(1-i/174))-3) //2 + 1 ) if 12.5 ** (i/174 -1)*(2*n+3) < 1] for i in range(174)}
+        
+    def __call__(self, img):
+        f_range   = img.size(1) // 3
+        clip_img = torch.zeros(img.size())
+        clip_pos = torch.gt(img, self.threshold)
+        for r in range(img.size(0)):
+            for t in range(img.size(2)):
+                for feat in range(3):
+                    for f in range(f_range*feat, f_range*(feat+1)):
+                        if clip_pos[r,f,t] == 1:
+                            clip_img[r,f,t] += self.threshold - img[r,f,t]
+                            for harmonics in range(len(self.idx_dict(f%f_range))):
+                                clip_img[r,f+self.idx_dict[harmonics],t] += 1./harmonics * img[r,f,t]                    
+        clip_img = clip_img.float()
+        cmix_img = img + clip_img
+        cmix_img = (cmix_img-torch.mean(cmix_img))/torch.std(cmix_img)
+        return cmix_img
 ################################################################################
 # Resources: 
 #   https://www.kaggle.com/huseinzol05/sound-augmentation-librosa
