@@ -8,7 +8,7 @@ Created on Fri Jul 19 14:24:23 2019
 import torch
 import torch.nn as nn
 import math
-from ShakeDrop import ShakeDrop
+from model_extend.ShakeDrop import ShakeDrop
 
 device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 

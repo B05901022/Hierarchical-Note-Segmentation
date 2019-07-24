@@ -21,7 +21,10 @@ use_cuda = torch.cuda.is_available()
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, 
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k=3):
-
+    
+    # input_t    shape: (1,3,522,data_length)
+    # target_Var shape: (1,data_length,6)
+    
     # encoder: Encoder
     # decoder: AttentionClassifier
     onDec       = decoders[0]

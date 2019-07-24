@@ -130,19 +130,42 @@ class AddNoise(object):
     def __call__(self, img):
         if self.noise_type == 'pink':
             f_range = img.size(1) // 3
-            gen_noise = np.random.uniform(0, f_range, size=img.size())
+            gen_noise = np.random.uniform(0, 1, size=img.size())
             for feat in range(3):
                 for f in range(f_range*feat, f_range*(feat+1)):
-                    gen_noise[:,f] = np.log(gen_noise[:,f])-(f%f_range)
+                    gen_noise[:,f] = np.log(gen_noise[:,f])-(f%f_range)/f_range
             gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
             gen_noise = torch.from_numpy(gen_noise).float()
-            return img + self.noise_size*gen_noise
+            return img + self.noise_size * gen_noise
+        if self.noise_type == 'brown':
+            f_range = img.size(1) // 3
+            gen_noise = np.random.uniform(0, 1, size=img.size())
+            for feat in range(3):
+                for f in range(f_range*feat, f_range*(feat+1)):
+                    gen_noise[:,f] = np.log(gen_noise[:,f])-2*(f%f_range)/f_range
+            gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
+            gen_noise = torch.from_numpy(gen_noise).float()
+            return img + self.noise_size * gen_noise
         elif self.noise_type == 'white':
             gen_noise = np.random.uniform(size=img.size())
             gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
             gen_noise = torch.from_numpy(gen_noise).float()
             return img + self.noise_size*gen_noise
+
+class EasyClipping(object):
+    '''
+    Simply clip to sign(x) randomly
+    '''
+    def __init__(self, prob, threshold):
+        self.prob = prob
+        self.threshold = threshold
         
+    def __call__(self, img):
+        random_num = torch.Tensor([0]).uniform_(0,1)
+        if random_num < self.prob:
+            img = torch.clamp(img, -self.threshold, self.threshold)           
+        return img
+    
 class Clipping(object):
     '''
     Not yet correct...
