@@ -16,6 +16,7 @@ from sklearn.mixture import GaussianMixture
 from statistics import median
 
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
+from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop_MaxPool
 
 device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
@@ -492,7 +493,8 @@ resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 
 onDec = resnet18
 """
-onDec = ResNet_ShakeDrop(depth=18, shakedrop=True)
+#onDec = ResNet_ShakeDrop(depth=18, shakedrop=True)
+onDec = PyramidNet_ShakeDrop_MaxPool(depth=20, shakedrop=True, alpha=270)
 
 onDec.load_state_dict(torch.load(on_dec_model_file))
 
