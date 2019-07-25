@@ -143,6 +143,7 @@ else:
     on_dec_optimizer.load_state_dict(torch.load(on_dec_model_train_file+'.optim'))
 
 on_note_decoder.to(device)
+on_dec_optimizer.to(device)
 
 note_decoders = [on_note_decoder]
 
