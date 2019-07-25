@@ -203,7 +203,7 @@ for epoch in range(EPOCH):
 
 #torch.save(note_encoders[0].state_dict(), on_enc_model_train_file)
 torch.save(note_decoders[0].state_dict(), on_dec_model_train_file)
-torch.save(dec_optimizers[0].state_dict(), on_dec_model_file+'.optim')
+torch.save(dec_optimizers[0].state_dict(), on_dec_model_train_file+'.optim')
 
 if PRESENT_EPOCH == 0 and PRESENT_FILE == 1:
     print("Re-initialize Loss Record File ...")
