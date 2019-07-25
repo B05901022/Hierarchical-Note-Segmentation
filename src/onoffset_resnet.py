@@ -134,16 +134,17 @@ resnet18 = PyramidNet_ShakeDrop_MaxPool(depth=20, shakedrop=True, alpha=270)
 if PRESENT_FILE == 1 and PRESENT_EPOCH == 0:
     print("Re-initialize Deep LSTM Module...")
     on_note_decoder = resnet18
+    on_note_decoder.to(device)
     on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)
 
 else:
     on_note_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(on_dec_model_train_file))
+    on_note_decoder.to(device)
     on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)
     on_dec_optimizer.load_state_dict(torch.load(on_dec_model_train_file+'.optim'))
 
-on_note_decoder.to(device)
-on_dec_optimizer.to(device)
+#on_note_decoder.to(device)
 
 note_decoders = [on_note_decoder]
 
