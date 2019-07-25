@@ -22,9 +22,10 @@ def train_resnet_4loss(input_t, target_Var, decoders, dec_opts,
     input_batch = input_t.size()[0]
     input_time_step = input_t.size()[3]
 
-    onDecOpt.zero_grad()
+    #onDecOpt.zero_grad()
 
-    onLoss  = 0
+    #onLoss  = 0
+    totLoss  = 0
 
     window_size = 2*k+1
 
@@ -32,6 +33,10 @@ def train_resnet_4loss(input_t, target_Var, decoders, dec_opts,
     
     for step in range((input_time_step//BATCH_SIZE)+1):
         if BATCH_SIZE*step > k and BATCH_SIZE*step < input_time_step - (k+1) - BATCH_SIZE:
+
+            onDecOpt.zero_grad()
+
+            onLoss = 0
 
             input_Var = Variable(torch.stack([ input_t[0, :, :, BATCH_SIZE*step+i-k:BATCH_SIZE*step+i-k+window_size]\
                            for i in range(BATCH_SIZE)], dim=0))
@@ -51,15 +56,23 @@ def train_resnet_4loss(input_t, target_Var, decoders, dec_opts,
                 onLoss += onLossFunc(onDecOut3[i].view(1, 2), target_Var[:,BATCH_SIZE*step+i, 4:].contiguous().view(1, 2))
                 target_T = torch.max(target_Var[:,BATCH_SIZE*step+i, 3], target_Var[:,BATCH_SIZE*step+i, 5])
                 onLoss += onLossFunc(onDecOut4[i].view(1, 3), torch.cat((target_Var[:,BATCH_SIZE*step+i, :2].contiguous().view(1, 2), target_T.contiguous().view(1, 1)), 1))
-                        
+            
+            onLoss.backward()
+
+            onDecOpt.step()
+
+            totLoss += onLoss.item()
+
     #for i in range(input_batch):
     #    loss += loss_func(note_out_prob[i], torch.max(target_Var.contiguous().view(input_batch, -1, OUTPUT_SIZE), dim=2)[1].view(note_out_prob.shape[1]))
     
-    onLoss.backward()
+    #onLoss.backward()
 
-    onDecOpt.step()
+    #onDecOpt.step()
 
-    return onLoss.item() / input_time_step
+    #return onLoss.item() / input_time_step
+
+    return totLoss / input_time_step
 
 def train_resnet_2loss(input_t, target_Var, decoders, dec_opts, 
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k=3):

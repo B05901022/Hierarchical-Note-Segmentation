@@ -134,16 +134,19 @@ resnet18 = PyramidNet_ShakeDrop_MaxPool(depth=20, shakedrop=True, alpha=270)
 if PRESENT_FILE == 1 and PRESENT_EPOCH == 0:
     print("Re-initialize Deep LSTM Module...")
     on_note_decoder = resnet18
+    on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)
 
 else:
     on_note_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(on_dec_model_train_file))
+    on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)
+    on_dec_optimizer.load_state_dict(torch.load(on_dec_model_train_file+'.optim'))
 
 on_note_decoder.to(device)
 
 note_decoders = [on_note_decoder]
 
-on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)
+#on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)
 
 dec_optimizers = [on_dec_optimizer]
 
@@ -185,6 +188,7 @@ for epoch in range(EPOCH):
             min_loss = avg_loss
             #torch.save(note_encoders[0].state_dict(), on_enc_model_file)
             torch.save(note_decoders[0].state_dict(), on_dec_model_file)
+            torch.save(dec_optimizers[0].state_dict(), on_dec_model_file+'.optim')
             #torch.save(note_encoders[1].state_dict(), off_enc_model_file)
             #torch.save(note_decoders[1].state_dict(), off_dec_model_file)
             stop_count = 0
@@ -199,6 +203,7 @@ for epoch in range(EPOCH):
 
 #torch.save(note_encoders[0].state_dict(), on_enc_model_train_file)
 torch.save(note_decoders[0].state_dict(), on_dec_model_train_file)
+torch.save(dec_optimizers[0].state_dict(), on_dec_model_file+'.optim')
 
 if PRESENT_EPOCH == 0 and PRESENT_FILE == 1:
     print("Re-initialize Loss Record File ...")
