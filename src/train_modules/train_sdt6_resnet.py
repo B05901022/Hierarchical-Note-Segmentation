@@ -8,7 +8,7 @@ import numpy as np
 import random
 
 use_cuda = torch.cuda.is_available()
-device   = torch.device('cuda:0' if use_cuda else 'cpu')
+device   = torch.device('cuda:2' if use_cuda else 'cpu')
 
 def train_resnet_4loss(input_t, target_Var, decoders, dec_opts, 
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k=3):
