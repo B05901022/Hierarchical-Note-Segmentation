@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SIZE_LR=1
+SIZE_LR=10 #1
 HS1=150
 HL1=3
 WS=9
