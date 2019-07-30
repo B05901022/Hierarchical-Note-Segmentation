@@ -20,18 +20,24 @@ from audio_augment import transform_method
 use_cuda = torch.cuda.is_available()
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, 
-    loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k=3):
+    loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k=3,
+    unlabel_t, unlabel_lambda=100., 
+    #MixMatchDict = {}
+    ):
     
     # input_t    shape: (1,3,522,data_length)
     # target_Var shape: (1,data_length,6)
+    # unlabel_t  shape: (1,3,522,unlabel_data_length)
     
     # encoder: Encoder
     # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
     onLossFunc  = loss_funcs[0] 
+    u_LossFunc  = torch.nn.MSELoss()
 
     input_time_step = input_t.size()[3]
+    unlabel_time_step = unlabel_t.size()[3]
 
     onDecOpt.zero_grad()
     
@@ -41,45 +47,72 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
 
     nn_softmax = nn.Softmax(dim=1)
     
-    for step in range((input_time_step//BATCH_SIZE)+1):
-        if BATCH_SIZE*step > k and BATCH_SIZE*step < input_time_step - (k+1) - BATCH_SIZE:
+    for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE):
+            
+        x_unmix_data = torch.stack([ input_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
+            
+        # === MixMatch ===
+        random_position = torch.randperm(unlabel_time_step-1-window_size)[:BATCH_SIZE]
+        u_unmix_data = torch.stack([ unlabel_t[0, :, :, random_position[i]:random_position[i]+window_size] for i in range(BATCH_SIZE)], dim=0)
+        x_mix_data, x_mix_label, u_mix_data, u_mix_label = Mixmatch(labeled_data=x_unmix_data,
+                                                                    labeled_label=target_Var[:, BATCH_SIZE*step:BATCH_SIZE*(step+1), :],
+                                                                    unlabeled_data=u_unmix_data,
+                                                                    curr_model=onDec,
+                                                                    )
+        
+        x_mix_data = Variable(x_mix_data)
+        u_mix_data = Variable(u_mix_data)
+        
+        # === Labeled ===
+        #input_Var shape: (10,3,522,19)
+        onDecOut6   = onDec(x_mix_data)
+        onDecOut1   = nn_softmax(onDecOut6[:, :2])
+        onDecOut2   = nn_softmax(onDecOut6[:, 2:4])
+        onDecOut3   = nn_softmax(onDecOut6[:, 4:])
+        
+        temp_t = torch.max(onDecOut2[:, 1], onDecOut3[:, 1]).view(-1,1)
+        onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
+        #print(onDecOut4.shape)
+        
+        # === Unlabeled ===
+        onDecOut6_u = onDec(u_mix_data)
+        onDecOut1_u = nn_softmax(onDecOut6_u[:, :2])
+        onDecOut2_u = nn_softmax(onDecOut6_u[:, 2:4])
+        onDecOut3_u = nn_softmax(onDecOut6_u[:, 4:])
+        
+        temp_t = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
+        onDecOut4_u = torch.cat((onDecOut1_u, temp_t), dim=1)
+        #print(onDecOut4_u.shape)
 
-            input_Var = Variable(torch.stack([ input_t[0, :, :, BATCH_SIZE*step+i-k:BATCH_SIZE*step+i-k+window_size]\
-                           for i in range(BATCH_SIZE)], dim=0))
-            #input_Var shape: (10,3,522,19)
-            onDecOut6 = onDec(input_Var)
-            onDecOut1 = nn_softmax(onDecOut6[:, :2])
-            onDecOut2 = nn_softmax(onDecOut6[:, 2:4])
-            onDecOut3 = nn_softmax(onDecOut6[:, 4:])
-
-            temp_t = torch.max(onDecOut2[:, 1], onDecOut3[:, 1]).view(-1,1)
-            onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
-            #print(onDecOut4.shape)
-
-            for i in range(BATCH_SIZE):
-                onLoss += onLossFunc(onDecOut1[i].view(1, 2), target_Var[:,BATCH_SIZE*step+i, :2].contiguous().view(1, 2))
-                onLoss += onLossFunc(onDecOut2[i].view(1, 2), target_Var[:,BATCH_SIZE*step+i, 2:4].contiguous().view(1, 2))
-                onLoss += onLossFunc(onDecOut3[i].view(1, 2), target_Var[:,BATCH_SIZE*step+i, 4:].contiguous().view(1, 2))
-                target_T = torch.max(target_Var[:,BATCH_SIZE*step+i, 3], target_Var[:,BATCH_SIZE*step+i, 5])
-                onLoss += onLossFunc(onDecOut4[i].view(1, 3), torch.cat((target_Var[:,BATCH_SIZE*step+i, :2].contiguous().view(1, 2), target_T.contiguous().view(1, 1)), 1))
+        for i in range(BATCH_SIZE):
+            
+            # === Labeled ===
+            onLoss += onLossFunc(onDecOut1[i].view(1, 2), target[:,i, :2].contiguous().view(1, 2))
+            onLoss += onLossFunc(onDecOut2[i].view(1, 2), target[:,i, 2:4].contiguous().view(1, 2))
+            onLoss += onLossFunc(onDecOut3[i].view(1, 2), target[:,i, 4:].contiguous().view(1, 2))
+            target_T = torch.max(target[:,i, 3], target_Var[:,i, 5])
+            onLoss += onLossFunc(onDecOut4[i].view(1, 3), torch.cat((target[:,i, :2].contiguous().view(1, 2), 
+                                 target_T.contiguous().view(1, 1)), 1))
+            
+            # === Unlabeled ===
+            # Add L2 loss for unlabeled data
+            
+            
                             
     onLoss.backward()
     onDecOpt.step()
-    
-    # why not update in for loop?
     
     return onLoss.item() / input_time_step
 
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
-             curr_timestep,
-             total_timestep, TSA_k=6, TSA_schedule='exp', 
+             TSA=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :{'n_holes':1, 'height':30, 'width':3}, 
                              'freq_mask' :False, # {'freq_mask_param':300}
                              'time_mask' :False, # {'time_mask_param':3}
-                             'pitchshift':{'shift_range':48},
-                             'addnoise'  :{'noise_type':'pink', 'noise_size'=0.01}, 
+                             'pitchshift':False, #{'shift_range':48},
+                             'addnoise'  :False, #{'noise_type':'pink', 'noise_size'=0.01}, 
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
              sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
     # labeled_data   shape: (10, 3, 522, 19)
@@ -104,9 +137,10 @@ def Mixmatch(labeled_data, labeled_label,
     label /= augment_time
     # label shape: (10, 6)
     
-    accept_label = tsa_detect(label, curr_timestep)
-    label = label[accept_label]
-    aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
+    if TSA:
+        accept_label = tsa_detect(label, curr_timestep)
+        label = label[accept_label]
+        aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
     
     label = Sharpen(label, sharpening_temp)
     
