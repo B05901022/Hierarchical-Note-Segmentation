@@ -15,8 +15,8 @@ from sklearn.externals import joblib
 from sklearn.mixture import GaussianMixture
 from statistics import median
 
-from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
-from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop_MaxPool
+from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
+from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
 
 device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
@@ -422,7 +422,7 @@ with open(data_file, 'r') as fd:
         data_np = np.loadtxt(fd)
         data_np = np.transpose(data_np)
         #data_np = data_np.reshape((1,-1))
-        data_np = data_np.reshape((1, -1, int(args.feat_num//3), 174*3)).transpose((0,2,3,1))
+        data_np = data_np.reshape((1, -1, int(args.feat_num), 174)).transpose((0,2,3,1)) #
         ans_np = np.loadtxt(fa, delimiter=' ')
         pitch_ans = ans_np[:, 2].reshape((ans_np.shape[0],))
         freq_ans = pitch2freq(pitch_ans)
@@ -493,8 +493,8 @@ resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 
 onDec = resnet18
 """
-#onDec = ResNet_ShakeDrop(depth=18, shakedrop=True)
-onDec = PyramidNet_ShakeDrop_MaxPool(depth=44, shakedrop=True, alpha=270)
+onDec = ResNet_ShakeDrop_9(depth=18, shakedrop=False)
+#onDec = PyramidNet_ShakeDrop_MaxPool(depth=44, shakedrop=True, alpha=270)
 
 onDec.load_state_dict(torch.load(on_dec_model_file))
 

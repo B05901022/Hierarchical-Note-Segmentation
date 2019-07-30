@@ -43,9 +43,9 @@ mkdir -p ${MDIR}
 
 for e in $(seq ${START_EPOCH} $((${END_EPOCH}-1)))
 do
-    for num in $(seq 1 83) #
+    for num in $(seq 1 82) #
     do
-        python3 src/onoffset_resnet.py -d1 ${DHEAD}${BUCKETLIST[num]}_${FEAT1} -a1 ${AHEAD1}${BUCKETLIST[num]} -em1 ${EMFILE1} \
+        python3 src/onoffset_resnet.py -d1 ${DHEAD}${num}_${FEAT1} -a1 ${AHEAD1}${num} -em1 ${EMFILE1} \
         -dm1 ${DMFILE1} -p ${num} -e ${e} -l ${LR} \
         --hs1 ${HS1} --hl1 ${HL1} --window-size ${WS} --single-epoch ${SE} --bi1 ${BIDIR1} \
         --loss-record ${LFILE} --batch-size ${BATCH} --norm ${NORM} --feat1 ${FEAT_NUM1} \

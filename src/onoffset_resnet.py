@@ -19,8 +19,8 @@ from argparse import ArgumentParser
 
 device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
-from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop, PyramidNet_ShakeDrop_MaxPool
-from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop
+from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop, PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
+from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
 
 #----------------------------
 # Parser
@@ -101,7 +101,7 @@ with open(on_data_file, 'r') as fd1:
         on_ans_np = np.loadtxt(fa1, delimiter=',')
         #off_ans_np = np.loadtxt(fa2, delimiter=',')
         min_row = on_ans_np.shape[0] if (on_ans_np.shape[0] < on_data_np.shape[0]) else on_data_np.shape[0]
-        on_data_np = on_data_np[:min_row].reshape((1, -1, int(args.feat_num1//3), 174*3)).transpose((0,2,3,1))
+        on_data_np = on_data_np[:min_row].reshape((1, -1, int(args.feat_num1), 174)).transpose((0,2,3,1)) #
         #off_data_np = off_data_np[:min_row].reshape((1,-1))
         on_ans_np = on_ans_np[:min_row].reshape((1,-1))
         #off_ans_np = off_ans_np[:min_row].reshape((1,-1))
@@ -125,8 +125,8 @@ num_fout = resnet18.conv1.out_channels
 resnet18.conv1 = nn.Conv2d(int(args.feat_num1//3), num_fout, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 """
-#resnet18 = ResNet_ShakeDrop(depth=18, shakedrop=True)
-resnet18 = PyramidNet_ShakeDrop_MaxPool(depth=44, shakedrop=True, alpha=270)
+resnet18 = ResNet_ShakeDrop_9(depth=18, shakedrop=False)
+#resnet18 = PyramidNet_ShakeDrop_MaxPool(depth=44, shakedrop=True, alpha=270)
 
 #----------------------------
 # Model Initialize
