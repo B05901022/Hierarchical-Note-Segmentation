@@ -7,7 +7,7 @@ https://github.com/pytorch/pytorch/blob/master/torch/optim/adamw.py
 
 import math
 import torch
-from .optimizer import Optimizer
+from torch.optim import Optimizer
 
 
 class AdamW(Optimizer):
