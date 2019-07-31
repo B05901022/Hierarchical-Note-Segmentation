@@ -114,7 +114,7 @@ def Mixmatch(labeled_data, labeled_label,
              curr_model,
              TSA=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
-                             'freq_mask' :False, # {'freq_mask_param':300}
+                             'freq_mask' :False, # {'freq_mask_param':100}
                              'time_mask' :False, # {'time_mask_param':5}
                              'pitchshift':False, #{'shift_range':48},
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size'=0.01}, 

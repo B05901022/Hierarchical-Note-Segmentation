@@ -107,20 +107,13 @@ class PitchShifting(object):
     def __init__(self, shift_range):
         self.shift_range = shift_range
     def __call__(self, img):
-        f_range   = img.size(1) // 3
+        f_range   = img.size(1)
         shift     = np.random.randint(-self.shift_range, self.shift_range+1)
         shift_img = torch.zeros(img.size())
-        for feat in range(3):
-            for f in range(f_range*feat, f_range*(feat+1)):
-                if f-shift >= f_range*feat and f-shift < f_range*(feat+1):
-                    shift_img[:,f] = img[:,f-shift]
+        for f in range(f_range):
+            if f-shift >= 0 and f-shift < f_range:
+                shift_img[:, f] = img[:, f-shift]
         shift_img = shift_img.float()
-        """
-        if torch.std(shift_img) != 0:
-            shift_img = (shift_img-torch.mean(shift_img))/torch.std(shift_img)
-        else:
-            shift_img = torch.zeros(img.size())
-        """
         return shift_img
     
 class AddNoise(object):
@@ -128,27 +121,22 @@ class AddNoise(object):
         self.noise_type = noise_type
         self.noise_size = torch.FloatTensor(1).uniform_(0,noise_size)[0]
     def __call__(self, img):
+        '''
+        
+        to make mean=0, variance=1, 
+        we need uniform(-sqrt(3), sqrt(3))
+        
+        '''
         if self.noise_type == 'pink':
-            f_range = img.size(1) // 3
-            gen_noise = np.random.uniform(0, 1, size=img.size())
-            for feat in range(3):
-                for f in range(f_range*feat, f_range*(feat+1)):
-                    gen_noise[:,f] = np.log(gen_noise[:,f])-(f%f_range)/f_range
-            gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
-            gen_noise = torch.from_numpy(gen_noise).float()
-            return img + self.noise_size * gen_noise
-        if self.noise_type == 'brown':
-            f_range = img.size(1) // 3
-            gen_noise = np.random.uniform(0, 1, size=img.size())
-            for feat in range(3):
-                for f in range(f_range*feat, f_range*(feat+1)):
-                    gen_noise[:,f] = np.log(gen_noise[:,f])-2*(f%f_range)/f_range
-            gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
+            f_range = img.size(1)
+            gen_noise = np.empty(img.size())
+            
+            for f in range(f_range):
+                gen_noise[:,f] = np.random.uniform(-np.sqrt(3)*f/f_range, np.sqrt(3)*f/f_range, size=img.size(2))
             gen_noise = torch.from_numpy(gen_noise).float()
             return img + self.noise_size * gen_noise
         elif self.noise_type == 'white':
-            gen_noise = np.random.uniform(size=img.size())
-            gen_noise = (gen_noise - np.mean(gen_noise)) / np.std(gen_noise)
+            gen_noise = np.random.uniform(-np.sqrt(3), np.sqrt(3), size=img.size())
             gen_noise = torch.from_numpy(gen_noise).float()
             return img + self.noise_size*gen_noise
 
@@ -174,11 +162,7 @@ class Clipping(object):
         self.clip_ratio = clip_ratio # not sure
         self.hard_clip  = hard_clip
         self.threshold  = threshold
-        
-        #freq_dist  = np.log(1000/80)/174
-        #freq_range = [80 * np.e ** (freq_dist * i) for i in range(174)]
-        #self.idx_dict  = {i : [np.clip(np.round(np.log(freq_range[i]*(2*n+3)/80)/freq_dist).astype(int),0,173) for n in range((math.floor(1000/freq_range[i])-3)//2 + 1) if freq_range[i]*(2*n+3) < 1000] for i in range(len(freq_range))}
-        
+                
         # really ugly, but means the harmonic indices of each frequency band index
         self.idx_dict = {i : [np.clip(np.round(np.log(2*n+3)/np.log(12.5)*174 + i).astype(int),0,173) for n in range( (math.floor(12.5**(1-i/174))-3) //2 + 1 ) if 12.5 ** (i/174 -1)*(2*n+3) < 1] for i in range(174)}
         
@@ -198,7 +182,5 @@ class Clipping(object):
         cmix_img = img + clip_img
         cmix_img = (cmix_img-torch.mean(cmix_img))/torch.std(cmix_img)
         return cmix_img
-################################################################################
-# Resources: 
-#   https://www.kaggle.com/huseinzol05/sound-augmentation-librosa
+
         
