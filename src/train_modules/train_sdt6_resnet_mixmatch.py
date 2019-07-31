@@ -20,7 +20,7 @@ from audio_augment import transform_method
 use_cuda = torch.cuda.is_available()
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, 
-    loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k=3,
+    loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
     unlabel_t, unlabel_lambda=100., 
     #MixMatchDict = {}
     ):
@@ -87,16 +87,21 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
         for i in range(BATCH_SIZE):
             
             # === Labeled ===
-            onLoss += onLossFunc(onDecOut1[i].view(1, 2), target[:,i, :2].contiguous().view(1, 2))
-            onLoss += onLossFunc(onDecOut2[i].view(1, 2), target[:,i, 2:4].contiguous().view(1, 2))
-            onLoss += onLossFunc(onDecOut3[i].view(1, 2), target[:,i, 4:].contiguous().view(1, 2))
-            target_T = torch.max(target[:,i, 3], target_Var[:,i, 5])
-            onLoss += onLossFunc(onDecOut4[i].view(1, 3), torch.cat((target[:,i, :2].contiguous().view(1, 2), 
+            onLoss += onLossFunc(onDecOut1[i].view(1, 2), x_mix_label[:,i, :2].contiguous().view(1, 2))
+            onLoss += onLossFunc(onDecOut2[i].view(1, 2), x_mix_label[:,i, 2:4].contiguous().view(1, 2))
+            onLoss += onLossFunc(onDecOut3[i].view(1, 2), x_mix_label[:,i, 4:].contiguous().view(1, 2))
+            target_T = torch.max(x_mix_label[:,i, 3], x_mix_label[:,i, 5])
+            onLoss += onLossFunc(onDecOut4[i].view(1, 3), torch.cat((x_mix_label[:,i, :2].contiguous().view(1, 2), 
                                  target_T.contiguous().view(1, 1)), 1))
             
             # === Unlabeled ===
             # Add L2 loss for unlabeled data
-            
+            onLoss += unlabel_lambda * u_LossFunc(onDecOut1_u[i].view(1, 2), u_mix_label[:,i, :2].contiguous().view(1, 2))
+            onLoss += unlabel_lambda * u_LossFunc(onDecOut2_u[i].view(1, 2), u_mix_label[:,i, 2:4].contiguous().view(1, 2))
+            onLoss += unlabel_lambda * u_LossFunc(onDecOut3_u[i].view(1, 2), u_mix_label[:,i, 4:].contiguous().view(1, 2))
+            target_T = torch.max(u_mix_label[:,i, 3], u_mix_label[:,i, 5])
+            onLoss += unlabel_lambda * u_LossFunc(onDecOut4_u[i].view(1, 3), torch.cat((u_mix_label[:,i, :2].contiguous().view(1, 2), 
+                                                  target_T.contiguous().view(1, 1)), 1))
             
                             
     onLoss.backward()
@@ -108,9 +113,9 @@ def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
              TSA=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
-             transform_dict={'cutout'    :{'n_holes':1, 'height':30, 'width':3}, 
+             transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
                              'freq_mask' :False, # {'freq_mask_param':300}
-                             'time_mask' :False, # {'time_mask_param':3}
+                             'time_mask' :False, # {'time_mask_param':5}
                              'pitchshift':False, #{'shift_range':48},
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size'=0.01}, 
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
