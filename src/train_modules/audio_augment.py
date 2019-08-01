@@ -14,6 +14,7 @@ import torch.utils.data as data_utils
 import numpy as np
 import scipy.ndimage
 import math
+import matplotlib.pyplot as plt
 
 def transform_method(transform_dict):
     
@@ -44,6 +45,12 @@ def transform_method(transform_dict):
             """)
     
     return transforms.Compose(transform_list)
+
+def image_show(torch_Tensor):
+    torch_Tensor = torch_Tensor.numpy()
+    torch_Tensor = torch_Tensor.reshape((174*9,19))
+    plt.matshow(np.repeat(torch_Tensor, 100, 1))
+    return
 
 class CutOut(object):
     '''
