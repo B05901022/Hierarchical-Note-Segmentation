@@ -60,8 +60,8 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         x_mix_data = Variable(x_mix_data)
         u_mix_data = Variable(u_mix_data)
-        x_mix_label.unsqueeze(0)
-        u_mix_label.unsqueeze(0)
+        x_mix_label = x_mix_label.unsqueeze(0)
+        u_mix_label = u_mix_label.unsqueeze(0)
         
         # === Labeled ===
         #input_Var shape: (10,3,522,19)
