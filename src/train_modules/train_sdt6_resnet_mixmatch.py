@@ -14,6 +14,7 @@ import torch.utils.data as data_utils
 import numpy as np
 import random
 import math
+import copy
 
 from train_modules.audio_augment import transform_method
 
@@ -53,7 +54,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         x_mix_data, x_mix_label, u_mix_data, u_mix_label = Mixmatch(labeled_data=x_unmix_data,
                                                                     labeled_label=target_Var[:, BATCH_SIZE*step:BATCH_SIZE*(step+1), :],
                                                                     unlabeled_data=u_unmix_data,
-                                                                    curr_model=onDec,
+                                                                    current_model=onDec,
                                                                     device=device
                                                                     )
         
@@ -108,7 +109,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
 
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
-             curr_model,
+             current_model,
              device,
              TSA_bool=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
@@ -122,7 +123,7 @@ def Mixmatch(labeled_data, labeled_label,
     # labeled_label  shape: (10, 6)
     # unlabeled_data shape: (10, 9, 174, 19)
     
-    curr_model = curr_model.eval() # avoid influencing gradient calculations
+    curr_model = copy.deepcopy(current_model).eval() # avoid influencing gradient calculations
     
     transform  = transform_method(transform_dict)
     
@@ -155,9 +156,6 @@ def Mixmatch(labeled_data, labeled_label,
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
                                       beta_dist_alpha)
-    print('aug_u[0].shape: ',aug_u[0].shape)
-    print('aug_u[1].shape: ',aug_u[1].shape)
-    print('label.shape: ',label.shape)
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), torch.cat([label for i in range(augment_time)], dim=0), 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
                                       beta_dist_alpha)
@@ -174,8 +172,6 @@ def Mixup(data, label,
           alpha):
     lam = np.random.beta(alpha, alpha)
     lam = max(lam, 1-lam)
-    print('data.shape: ', data.shape)
-    print('unlabel_data.shape: ',unlabel_data.shape)
     mixed_data  = lam*data  + (1-lam)*unlabel_data
     mixed_label = lam*label + (1-lam)*unlabel_label
     return mixed_data, mixed_label
