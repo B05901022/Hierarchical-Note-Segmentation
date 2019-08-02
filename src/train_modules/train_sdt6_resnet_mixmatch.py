@@ -44,8 +44,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
 
     nn_softmax = nn.Softmax(dim=1)
     
-    for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE):
-        print(step)   
+    for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE):  
         x_unmix_data = torch.stack([ input_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
             
         # === MixMatch ===
@@ -62,10 +61,6 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         u_mix_data = Variable(u_mix_data)
         x_mix_label = Variable(x_mix_label.unsqueeze(0))
         u_mix_label = Variable(u_mix_label.unsqueeze(0))
-        print(x_mix_data.shape)
-        print(u_mix_data.shape)
-        print(x_mix_label.shape)
-        print(u_mix_label.shape)
         
         # === Labeled ===
         #input_Var shape: (10,3,522,19)
@@ -160,6 +155,11 @@ def Mixmatch(labeled_data, labeled_label,
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
                                       beta_dist_alpha)
+    print(torch.cat(aug_u, dim=0).shape)
+    print(torch.cat([label for i in range(augment_time)], dim=0).shape)
+    print(stack_data[shuffle[aug_x.size(0):]].shape)
+    print(stack_label[shuffle[aug_x.size(0):]].shape)
+    print()
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), torch.cat([label for i in range(augment_time)], dim=0), 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
                                       beta_dist_alpha)
