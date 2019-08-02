@@ -121,6 +121,7 @@ with open(on_data_file, 'r') as fd1:
 #----------------------------
 unlabel_list = os.listdir(on_udata_dir)
 on_udata_file = unlabel_list[np.random.randint(len(unlabel_list))]
+on_udata_file = on_udata_dir + on_udata_file
 
 try:
     myfile = open(on_udata_file, 'r')
