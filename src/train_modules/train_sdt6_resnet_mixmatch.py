@@ -135,7 +135,6 @@ def Mixmatch(labeled_data, labeled_label,
         aug_u.append(aug_u_k)
         if len(aug_u) == 1:
             label = curr_model(aug_u_k)
-            print(label.shape)
         else:
             label += curr_model(aug_u_k)
     label /= augment_time
@@ -166,7 +165,7 @@ def Mixmatch(labeled_data, labeled_label,
 def Sharpen(dist, T):
     sharpen_dist = dist
     for i in range(sharpen_dist.size(0)):
-        sharpen_dist[i] = ( sharpen_dist[i]**(1./T) )/torch.sum( sharpen_dist[i]**(1./T) )
+        sharpen_dist[i] =  sharpen_dist[i]**(1./T) )/torch.sum( sharpen_dist[i]**(1./T) 
     return sharpen_dist
 
 def Mixup(data, label,
