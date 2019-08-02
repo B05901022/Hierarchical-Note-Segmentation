@@ -111,7 +111,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
-             TSA=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
+             TSA_bool=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
                              'freq_mask' :False, # {'freq_mask_param':100}
                              'time_mask' :False, # {'time_mask_param':5}
@@ -126,7 +126,6 @@ def Mixmatch(labeled_data, labeled_label,
     curr_model = curr_model.eval() # avoid influencing gradient calculations
     
     transform  = transform_method(transform_dict)
-    tsa_detect = TSA(total_timestep, TSA_k, TSA_schedule)
     
     aug_x = transform(labeled_data, transform)
     aug_u = []
@@ -141,7 +140,8 @@ def Mixmatch(labeled_data, labeled_label,
     label /= augment_time
     # label shape: (10, 6)
     
-    if TSA:
+    tsa_detect = TSA(total_timestep, TSA_k, TSA_schedule)
+    if TSA_bool:
         accept_label = tsa_detect(label, curr_timestep)
         label = label[accept_label]
         aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
