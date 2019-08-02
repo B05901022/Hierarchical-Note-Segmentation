@@ -127,7 +127,7 @@ def Mixmatch(labeled_data, labeled_label,
     
     transform  = transform_method(transform_dict)
     
-    aug_x = transform(labeled_data, transform)
+    aug_x = transform(labeled_data)
     aug_u = []
     label = None
     for k in range(augment_time):
@@ -140,8 +140,8 @@ def Mixmatch(labeled_data, labeled_label,
     label /= augment_time
     # label shape: (10, 6)
     
-    tsa_detect = TSA(total_timestep, TSA_k, TSA_schedule)
     if TSA_bool:
+        tsa_detect = TSA(total_timestep, TSA_k, TSA_schedule)
         accept_label = tsa_detect(label, curr_timestep)
         label = label[accept_label]
         aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
