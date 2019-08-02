@@ -195,10 +195,10 @@ for epoch in range(EPOCH):
         # b_x1 shape: (1,9,174,songlength)
         # b_y1 shape: (1,songlength,6)
 
-        loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, 
+        loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, device
                                            loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
                                            BATCH_SIZE, k=WINDOW_SIZE,
-                                           unlabel_t=b_u1, unlabel_lambda=100.0, device)
+                                           unlabel_t=b_u1, unlabel_lambda=100.0)
 
         total_loss += loss
         loss_count += 1

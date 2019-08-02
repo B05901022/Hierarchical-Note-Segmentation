@@ -17,9 +17,9 @@ import math
 
 from train_modules.audio_augment import transform_method
 
-def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, 
+def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
-    unlabel_t, unlabel_lambda=100.0, device,
+    unlabel_t, unlabel_lambda=100.0,
     ):
     
     # input_t    shape: (1,3,522,data_length)
