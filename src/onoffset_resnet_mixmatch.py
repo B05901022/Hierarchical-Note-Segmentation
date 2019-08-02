@@ -22,7 +22,7 @@ device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop, PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
 from model_extend.AdamW import AdamW
-from onoffset_modules.train_sdt6_resnet_mixmatch import train_resnet_4loss_mixmatch
+from train_modules.train_sdt6_resnet_mixmatch import train_resnet_4loss_mixmatch
 import os
 
 #----------------------------
