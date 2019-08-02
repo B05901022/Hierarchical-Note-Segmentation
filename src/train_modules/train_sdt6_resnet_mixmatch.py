@@ -45,7 +45,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     nn_softmax = nn.Softmax(dim=1)
     
     for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE):
-            
+        print(step)   
         x_unmix_data = torch.stack([ input_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
             
         # === MixMatch ===
@@ -86,7 +86,6 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         temp_t = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
         onDecOut4_u = torch.cat((onDecOut1_u, temp_t), dim=1)
-        #print(onDecOut4_u.shape)
 
         for i in range(BATCH_SIZE):
             
