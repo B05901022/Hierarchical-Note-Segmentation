@@ -127,7 +127,7 @@ def Mixmatch(labeled_data, labeled_label,
     transform  = transform_method(transform_dict)
     
     aug_x = transform(labeled_data).to(device)
-    labeled_label = labeled_label.to(device)
+    labeled_label = labeled_label[0].to(device)
     aug_u = []
     label = None
     for k in range(augment_time):
@@ -146,10 +146,7 @@ def Mixmatch(labeled_data, labeled_label,
         label = label[accept_label]
         aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
     
-    print(label.shape)
     label = Sharpen(label, sharpening_temp)
-    print(label.shape)
-    print(labeled_label.shape)
     
     stack_data  = torch.cat((aug_x, *aug_u), dim=0)
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
