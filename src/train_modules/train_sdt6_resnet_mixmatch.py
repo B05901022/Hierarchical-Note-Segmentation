@@ -15,7 +15,7 @@ import numpy as np
 import random
 import math
 
-from audio_augment import transform_method
+from train_modules.audio_augment import transform_method
 
 use_cuda = torch.cuda.is_available()
 
