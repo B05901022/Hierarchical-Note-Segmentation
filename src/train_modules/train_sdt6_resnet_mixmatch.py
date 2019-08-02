@@ -155,7 +155,7 @@ def Mixmatch(labeled_data, labeled_label,
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
                                       beta_dist_alpha)
-    print(aug_u.shape)
+    print(len(aug_u))
     print(label.shape)
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), [label for i in range(augment_time)], 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
