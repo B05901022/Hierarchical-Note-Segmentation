@@ -119,9 +119,9 @@ def Mixmatch(labeled_data, labeled_label,
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
              sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
-    # labeled_data   shape: (10, 3, 522, 19)
+    # labeled_data   shape: (10, 9, 174, 19)
     # labeled_label  shape: (10, 6)
-    # unlabeled_data shape: (10, 3, 522, 19)
+    # unlabeled_data shape: (10, 9, 174, 19)
     
     curr_model = curr_model.eval() # avoid influencing gradient calculations
     

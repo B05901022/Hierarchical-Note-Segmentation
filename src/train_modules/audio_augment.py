@@ -62,10 +62,10 @@ class CutOut(object):
         self.height  = height
         self.width   = width
     def __call__(self, img):
-        h = img.size(1)
-        w = img.size(2)
+        h = img.size(2)
+        w = img.size(3)
         
-        mask = np.ones((h,w), np.float32)
+        mask = np.ones((img.size(0), img.size(1), h,w), np.float32)
         
         for holes in range(self.n_holes):
             centre_y = np.random.randint(h)
@@ -76,7 +76,7 @@ class CutOut(object):
             x1 = np.clip(centre_x - self.width  // 2, 0, w)
             x2 = np.clip(centre_x + self.width  // 2, 0, w)
             
-            mask[y1:y2, x1:x2] = 0.
+            mask[:,:,y1:y2, x1:x2] = 0.
         
         mask = torch.from_numpy(mask)
         mask = mask.expand_as(img)
@@ -91,10 +91,10 @@ class FrequencyMasking(object):
     def __init__(self, freq_mask_param):
         self.F = freq_mask_param
     def __call__(self, img):
-        v    = img.size(1)
+        v    = img.size(2)
         f    = np.random.randint(0, self.F)
         f0   = np.random.randint(0, v-f)
-        img[:,f0:f0+f,:].fill_(0)        
+        img[:,:,f0:f0+f,:].fill_(0)        
         return img
 
 class TimeMasking(object):
@@ -104,22 +104,22 @@ class TimeMasking(object):
     def __init__(self, time_mask_param):
         self.T = time_mask_param
     def __call__(self, img):
-        tau  = img.size(2)
+        tau  = img.size(3)
         t    = np.random.randint(0, self.T)
         t0   = np.random.randint(0, tau-t)
-        img[:,:,t0:t0+t].fill_(0)        
+        img[:,:,:,t0:t0+t].fill_(0)        
         return img
 
 class PitchShifting(object):
     def __init__(self, shift_range):
         self.shift_range = shift_range
     def __call__(self, img):
-        f_range   = img.size(1)
+        f_range   = img.size(2)
         shift     = np.random.randint(-self.shift_range, self.shift_range+1)
         shift_img = torch.zeros(img.size())
         for f in range(f_range):
             if f-shift >= 0 and f-shift < f_range:
-                shift_img[:, f] = img[:, f-shift]
+                shift_img[:,:, f] = img[:,:, f-shift]
         shift_img = shift_img.float()
         return shift_img
     
@@ -135,11 +135,11 @@ class AddNoise(object):
         
         '''
         if self.noise_type == 'pink':
-            f_range = img.size(1)
+            f_range = img.size(2)
             gen_noise = np.empty(img.size())
             
             for f in range(f_range):
-                gen_noise[:,f] = np.random.uniform(-np.sqrt(3)*f/f_range, np.sqrt(3)*f/f_range, size=img.size(2))
+                gen_noise[:,:,f] = np.random.uniform(-np.sqrt(3)*f/f_range, np.sqrt(3)*f/f_range, size=img.size(3))
             gen_noise = torch.from_numpy(gen_noise).float()
             return img + self.noise_size * gen_noise
         elif self.noise_type == 'white':
@@ -160,7 +160,8 @@ class EasyClipping(object):
         if random_num < self.prob:
             img = torch.clamp(img, -self.threshold, self.threshold)           
         return img
-    
+ 
+"""
 class Clipping(object):
     '''
     Not yet correct...
@@ -189,5 +190,5 @@ class Clipping(object):
         cmix_img = img + clip_img
         cmix_img = (cmix_img-torch.mean(cmix_img))/torch.std(cmix_img)
         return cmix_img
-
+"""
         
