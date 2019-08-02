@@ -17,12 +17,9 @@ import math
 
 from train_modules.audio_augment import transform_method
 
-use_cuda = torch.cuda.is_available()
-
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, 
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
-    unlabel_t, unlabel_lambda=100.0, 
-    #MixMatchDict = {}
+    unlabel_t, unlabel_lambda=100.0, device,
     ):
     
     # input_t    shape: (1,3,522,data_length)
@@ -58,6 +55,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
                                                                     labeled_label=target_Var[:, BATCH_SIZE*step:BATCH_SIZE*(step+1), :],
                                                                     unlabeled_data=u_unmix_data,
                                                                     curr_model=onDec,
+                                                                    device=device
                                                                     )
         
         x_mix_data = Variable(x_mix_data)
@@ -111,6 +109,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
              curr_model,
+             device,
              TSA_bool=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
                              'freq_mask' :False, # {'freq_mask_param':100}
@@ -127,11 +126,12 @@ def Mixmatch(labeled_data, labeled_label,
     
     transform  = transform_method(transform_dict)
     
-    aug_x = transform(labeled_data)
+    aug_x = transform(labeled_data).to(device)
+    labeled_label = labeled_label.to(device)
     aug_u = []
     label = None
     for k in range(augment_time):
-        aug_u_k = transform(unlabeled_data, transform)
+        aug_u_k = transform(unlabeled_data).to(device)
         aug_u.append(aug_u_k)
         if label == None:
             label = curr_model(aug_u_k)
@@ -158,7 +158,6 @@ def Mixmatch(labeled_data, labeled_label,
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), [label for i in range(augment_time)], 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
                                       beta_dist_alpha)
-    
     return x_mix_data, x_mix_label, u_mix_data, u_mix_label
 
 def Sharpen(dist, T):

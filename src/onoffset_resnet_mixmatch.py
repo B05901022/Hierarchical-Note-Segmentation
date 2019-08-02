@@ -17,7 +17,7 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
-device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop, PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
@@ -102,19 +102,12 @@ with open(on_data_file, 'r') as fd1:
     with open(on_ans_file, 'r') as fa1:
         on_data_np = np.loadtxt(fd1)
         on_data_np = np.transpose(on_data_np)
-        #off_data_np = np.loadtxt(fd2)
-        #off_data_np = np.transpose(off_data_np)
         on_ans_np = np.loadtxt(fa1, delimiter=',')
-        #off_ans_np = np.loadtxt(fa2, delimiter=',')
         min_row = on_ans_np.shape[0] if (on_ans_np.shape[0] < on_data_np.shape[0]) else on_data_np.shape[0]
         on_data_np = on_data_np[:min_row].reshape((1, -1, int(args.feat_num1), 174)).transpose((0,2,3,1)) #
-        #off_data_np = off_data_np[:min_row].reshape((1,-1))
         on_ans_np = on_ans_np[:min_row].reshape((1,-1))
-        #off_ans_np = off_ans_np[:min_row].reshape((1,-1))
-        on_data = torch.from_numpy(on_data_np).type(torch.FloatTensor).to(device)
-        #off_data = torch.from_numpy(off_data_np).type(torch.FloatTensor).to(device)
-        on_ans = torch.from_numpy(on_ans_np).type(torch.FloatTensor).to(device)
-        #off_ans = torch.from_numpy(off_ans_np).type(torch.LongTensor).to(device)
+        on_data = torch.from_numpy(on_data_np).type(torch.FloatTensor)#.to(device)
+        on_ans = torch.from_numpy(on_ans_np).type(torch.FloatTensor)#.to(device)
 
 #----------------------------
 # Unlabeled Data Collection
@@ -133,7 +126,7 @@ with open(on_udata_file, 'r') as fu1:
     on_udata_np = np.loadtxt(fu1)
     on_udata_np = np.transpose(on_udata_np)
     on_udata_np = on_udata_np.reshape((1, -1, int(args.feat_num1), 174)).transpose((0,2,3,1)) #
-    on_udata = torch.from_numpy(on_udata_np).type(torch.FloatTensor).to(device)       
+    on_udata = torch.from_numpy(on_udata_np).type(torch.FloatTensor)#.to(device)       
 
 #train data
 train_loader = data_utils.DataLoader(
@@ -205,7 +198,7 @@ for epoch in range(EPOCH):
         loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, 
                                            loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
                                            BATCH_SIZE, k=WINDOW_SIZE,
-                                           unlabel_t=b_u1, unlabel_lambda=100.0)
+                                           unlabel_t=b_u1, unlabel_lambda=100.0, device)
 
         total_loss += loss
         loss_count += 1
