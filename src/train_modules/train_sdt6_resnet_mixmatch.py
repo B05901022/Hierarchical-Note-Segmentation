@@ -21,7 +21,7 @@ use_cuda = torch.cuda.is_available()
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, 
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
-    unlabel_t, unlabel_lambda=100., 
+    unlabel_t, unlabel_lambda=100.0, 
     #MixMatchDict = {}
     ):
     
@@ -102,8 +102,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts,
             target_T = torch.max(u_mix_label[:,i, 3], u_mix_label[:,i, 5])
             onLoss += unlabel_lambda * u_LossFunc(onDecOut4_u[i].view(1, 3), torch.cat((u_mix_label[:,i, :2].contiguous().view(1, 2), 
                                                   target_T.contiguous().view(1, 1)), 1))
-            
-                            
+                                    
     onLoss.backward()
     onDecOpt.step()
     
