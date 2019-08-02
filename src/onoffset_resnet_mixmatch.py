@@ -204,7 +204,7 @@ for epoch in range(EPOCH):
         loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, 
                                            loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
                                            BATCH_SIZE, k=WINDOW_SIZE,
-                                           b_u1, 100.0)
+                                           unlabel_t=b_u1, unlabel_lambda=100.0)
 
         total_loss += loss
         loss_count += 1
