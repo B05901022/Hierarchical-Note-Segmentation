@@ -13,7 +13,7 @@ BATCH=64 #128 #32 #10
 FEAT1=SN_SF1_SIN_SF1_ZN_F9
 FEAT_NUM1=9
 
-START_EPOCH=10 #
+START_EPOCH=9 #
 END_EPOCH=30 #80
 
 LOG_FILE="log/sdt6_resnet_pyramidnet44shakedropfixoptim_${NORM}${WS}_l${HL1}h${HS1}b${BIDIR1}_e${END_EPOCH}b${BATCH}_${FEAT1}_sample.log"
