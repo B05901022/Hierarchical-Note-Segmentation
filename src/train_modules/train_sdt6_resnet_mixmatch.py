@@ -133,7 +133,7 @@ def Mixmatch(labeled_data, labeled_label,
     for k in range(augment_time):
         aug_u_k = transform(unlabeled_data).to(device)
         aug_u.append(aug_u_k)
-        if label == None:
+        if len(aug_u) == 1:
             label = curr_model(aug_u_k)
         else:
             label += curr_model(aug_u_k)
