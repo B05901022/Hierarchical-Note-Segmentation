@@ -135,6 +135,7 @@ def Mixmatch(labeled_data, labeled_label,
         aug_u.append(aug_u_k)
         if len(aug_u) == 1:
             label = curr_model(aug_u_k)
+            print(label.shape)
         else:
             label += curr_model(aug_u_k)
     label /= augment_time
