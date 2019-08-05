@@ -44,8 +44,10 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     nn_softmax = nn.Softmax(dim=1)
     
     for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE):  
-        x_unmix_data = torch.stack([ input_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
         print(step)
+        onLoss  = 0 
+        
+        x_unmix_data = torch.stack([ input_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
         # === MixMatch ===
         random_position = torch.randperm(unlabel_time_step-1-window_size)[:BATCH_SIZE]
         u_unmix_data = torch.stack([ unlabel_t[0, :, :, random_position[i]:random_position[i]+window_size] for i in range(BATCH_SIZE)], dim=0)
@@ -55,8 +57,6 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
                                                                     curr_model=onDec,
                                                                     device=device
                                                                     )
-        onDecOpt.zero_grad()
-        onLoss  = 0
         
         x_mix_data = Variable(x_mix_data)
         u_mix_data = Variable(u_mix_data)
@@ -101,7 +101,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
             target_T = torch.max(u_mix_label[:,i, 3], u_mix_label[:,i, 5])
             onLoss += unlabel_lambda * u_LossFunc(onDecOut4_u[i].view(1, 3), torch.cat((u_mix_label[:,i, :2].contiguous().view(1, 2), 
                                                   target_T.contiguous().view(1, 1)), 1))
-                                    
+        onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
         totLoss += onLoss.item()
