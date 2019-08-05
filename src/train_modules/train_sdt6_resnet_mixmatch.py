@@ -129,6 +129,13 @@ def Mixmatch(labeled_data, labeled_label,
     
     transform  = transform_method(transform_dict)
     
+    # --- Normalization ---
+    
+    labeled_data   = Normalize(labeled_data)
+    unlabeled_data = Normalize(unlabeled_data)
+    
+    # ---------------------
+    
     aug_x = transform(labeled_data).to(device)
     labeled_label = labeled_label[0].to(device, non_blocking=True)
     aug_u = []
@@ -174,6 +181,10 @@ def Mixmatch(labeled_data, labeled_label,
                                       beta_dist_alpha)
     #print()
     return x_mix_data, x_mix_label, u_mix_data, u_mix_label
+
+def Normalize(data):
+    # Batchwise normalization (test)
+    return (data-torch.mean(data))/torch.std(data)
 
 def Sharpen(dist, T):
     sharpen_dist = dist ** (1./T)
