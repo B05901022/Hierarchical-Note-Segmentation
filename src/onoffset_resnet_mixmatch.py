@@ -17,7 +17,7 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda')#torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop, PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
