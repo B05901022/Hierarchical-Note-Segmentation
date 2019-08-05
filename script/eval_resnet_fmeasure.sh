@@ -12,7 +12,7 @@ LR=$(echo "${BASE_LR} * ${SIZE_LR}" | bc)
 HS1=150
 HL1=3
 WS=9
-SE=2 #
+SE=5 #
 BIDIR1=1
 NORM=ln
 
