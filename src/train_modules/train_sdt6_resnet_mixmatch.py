@@ -181,8 +181,6 @@ def Mixup(data, label,
     print('unlabel_data shape', unlabel_data.shape)
     print(lam)
     print((1.-lam))
-    print(lam*data)
-    print((1.-lam)*unlabel_data)
     print('lam*data shape', (lam*data).shape)
     print('(1.-lam)*unlabel_data shape', ((1.-lam)*unlabel_data).shape)
     mixed_data  = lam*data  + (1.-lam)*unlabel_data
