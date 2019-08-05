@@ -44,7 +44,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     nn_softmax = nn.Softmax(dim=1)
     
     for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE):  
-        print(step)
+        #print(step)
         onLoss  = 0 
         
         x_unmix_data = torch.stack([ input_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
@@ -153,25 +153,25 @@ def Mixmatch(labeled_data, labeled_label,
     
     stack_data  = torch.cat((aug_x, *aug_u), dim=0)
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
-    print('stack_data shape', stack_data.shape)
-    print('stack_label shape', stack_label.shape)
-    print('labeled_label shape', labeled_label.shape)
-    print('label shape', label.shape)
-    print('augment_time', augment_time)
-    print('aug_x shape', aug_x.shape)
+    #print('stack_data shape', stack_data.shape)
+    #print('stack_label shape', stack_label.shape)
+    #print('labeled_label shape', labeled_label.shape)
+    #print('label shape', label.shape)
+    #print('augment_time', augment_time)
+    #print('aug_x shape', aug_x.shape)
     
     shuffle = torch.randperm(stack_data.size(0))
-    print(shuffle.shape)
-    print('shuffle', shuffle)
-    print('processing x')
+    #print(shuffle.shape)
+    #print('shuffle', shuffle)
+    #print('processing x')
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
                                       beta_dist_alpha)
-    print('processing u')
+    #print('processing u')
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), torch.cat([label for i in range(augment_time)], dim=0), 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
                                       beta_dist_alpha)
-    print()
+    #print()
     return x_mix_data, x_mix_label, u_mix_data, u_mix_label
 
 def Sharpen(dist, T):
@@ -184,12 +184,12 @@ def Mixup(data, label,
           alpha):
     lam = np.random.beta(alpha, alpha)
     lam = max(lam, 1.-lam)
-    print('data shape', data.shape)
-    print('unlabel_data shape', unlabel_data.shape)
-    print(lam)
-    print((1.-lam))
-    print('lam*data shape', (lam*data).shape)
-    print('(1.-lam)*unlabel_data shape', ((1.-lam)*unlabel_data).shape)
+    #print('data shape', data.shape)
+    #print('unlabel_data shape', unlabel_data.shape)
+    #print(lam)
+    #print((1.-lam))
+    #print('lam*data shape', (lam*data).shape)
+    #print('(1.-lam)*unlabel_data shape', ((1.-lam)*unlabel_data).shape)
     mixed_data  = lam*data  + (1.-lam)*unlabel_data
     mixed_label = lam*label + (1.-lam)*unlabel_label
     return mixed_data, mixed_label
