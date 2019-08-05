@@ -138,9 +138,9 @@ def Mixmatch(labeled_data, labeled_label,
             aug_u_k = transform(unlabeled_data).to(device)
             aug_u.append(aug_u_k)
             if len(aug_u) == 1:
-                label = F.softmax(curr_model(aug_u_k), dim=1)
+                label = curr_model(aug_u_k)
             else:
-                label += F.softmax(curr_model(aug_u_k), dim=1)
+                label += curr_model(aug_u_k)
         label /= augment_time
         label = Sharpen(label, sharpening_temp)
     # label shape: (10, 6)
