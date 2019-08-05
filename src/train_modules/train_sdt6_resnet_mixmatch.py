@@ -15,6 +15,7 @@ import numpy as np
 import random
 import math
 import copy
+import torch.nn.functional as F
 
 from train_modules.audio_augment import transform_method
 
@@ -137,11 +138,10 @@ def Mixmatch(labeled_data, labeled_label,
             aug_u_k = transform(unlabeled_data).to(device)
             aug_u.append(aug_u_k)
             if len(aug_u) == 1:
-                label = curr_model(aug_u_k)
+                label = F.softmax(curr_model(aug_u_k))
             else:
-                label += curr_model(aug_u_k)
+                label += F.softmax(curr_model(aug_u_k))
         label /= augment_time
-        print(label.shape)
         label = Sharpen(label, sharpening_temp)
     # label shape: (10, 6)
     
