@@ -157,6 +157,8 @@ def Mixmatch(labeled_data, labeled_label,
     print('aug_x shape', aug_x.shape)
     
     shuffle = torch.randperm(stack_data.size(0))
+    print(shuffle.shape)
+    print('shuffle', shuffle)
     print('processing x')
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
@@ -165,6 +167,7 @@ def Mixmatch(labeled_data, labeled_label,
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), torch.cat([label for i in range(augment_time)], dim=0), 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
                                       beta_dist_alpha)
+    print()
     return x_mix_data, x_mix_label, u_mix_data, u_mix_label
 
 def Sharpen(dist, T):
