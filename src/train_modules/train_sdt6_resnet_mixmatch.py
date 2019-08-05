@@ -119,7 +119,7 @@ def Mixmatch(labeled_data, labeled_label,
                              'pitchshift':False, #{'shift_range':48},
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
-             sharpening_temp=2, augment_time=2, beta_dist_alpha=0.75):
+             sharpening_temp=2., augment_time=2, beta_dist_alpha=0.75):
     # labeled_data   shape: (10, 9, 174, 19)
     # labeled_label  shape: (10, 6)
     # unlabeled_data shape: (10, 9, 174, 19)
@@ -141,9 +141,8 @@ def Mixmatch(labeled_data, labeled_label,
             else:
                 label += curr_model(aug_u_k)
         label /= augment_time
-        print(label)
+        print(label.shape)
         label = Sharpen(label, sharpening_temp)
-        print(label)
     # label shape: (10, 6)
     
     if TSA_bool:
