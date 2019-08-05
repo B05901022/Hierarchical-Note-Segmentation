@@ -142,7 +142,6 @@ def Mixmatch(labeled_data, labeled_label,
                 label += curr_model(aug_u_k)
         label /= augment_time
         label = Sharpen(label, sharpening_temp)
-        label = label.detach()
     # label shape: (10, 6)
     
     if TSA_bool:
@@ -153,6 +152,7 @@ def Mixmatch(labeled_data, labeled_label,
     
     stack_data  = torch.cat((aug_x, *aug_u), dim=0)
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
+    print(stack_label)
     #print('stack_data shape', stack_data.shape)
     #print('stack_label shape', stack_label.shape)
     #print('labeled_label shape', labeled_label.shape)
