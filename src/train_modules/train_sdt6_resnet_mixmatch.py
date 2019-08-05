@@ -45,7 +45,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     
     for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE):  
         x_unmix_data = torch.stack([ input_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
-            
+        print(step)
         # === MixMatch ===
         random_position = torch.randperm(unlabel_time_step-1-window_size)[:BATCH_SIZE]
         u_unmix_data = torch.stack([ unlabel_t[0, :, :, random_position[i]:random_position[i]+window_size] for i in range(BATCH_SIZE)], dim=0)
@@ -157,9 +157,11 @@ def Mixmatch(labeled_data, labeled_label,
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
     
     shuffle = torch.randperm(stack_data.size(0))
+    print('processing x')
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
                                       beta_dist_alpha)
+    print('processing u')
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), torch.cat([label for i in range(augment_time)], dim=0), 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
                                       beta_dist_alpha)
