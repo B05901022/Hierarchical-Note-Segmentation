@@ -179,6 +179,7 @@ def Mixup(data, label,
     lam = max(lam, 1.-lam)
     print('data shape', data.shape)
     print('unlabel_data shape', unlabel_data.shape)
+    print('tensor a shape', data.shape, 'tensor b shape', unlabel_data.shape, 'if they are equal', data.shape==unlabel_data.shape)
     mixed_data  = lam*data  + (1.-lam)*unlabel_data
     mixed_label = lam*label + (1.-lam)*unlabel_label
     return mixed_data, mixed_label
