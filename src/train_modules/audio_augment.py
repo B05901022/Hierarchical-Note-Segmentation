@@ -65,7 +65,7 @@ class CutOut(object):
         h = img.size(2)
         w = img.size(3)
         
-        mask = np.ones((img.size(0), img.size(1), h,w), np.float32)
+        mask = np.ones((h,w), np.float32)
         
         for holes in range(self.n_holes):
             centre_y = np.random.randint(h)
@@ -76,7 +76,7 @@ class CutOut(object):
             x1 = np.clip(centre_x - self.width  // 2, 0, w)
             x2 = np.clip(centre_x + self.width  // 2, 0, w)
             
-            mask[:,:,y1:y2, x1:x2] = 0.
+            mask[y1:y2, x1:x2] = 0.
         
         mask = torch.from_numpy(mask)
         mask = mask.expand_as(img)
@@ -94,7 +94,7 @@ class FrequencyMasking(object):
         v    = img.size(2)
         f    = np.random.randint(0, self.F)
         f0   = np.random.randint(0, v-f)
-        img[:,:,f0:f0+f,:].fill_(0)        
+        img[:,:,f0:f0+f,:].fill_(0.)        
         return img
 
 class TimeMasking(object):
@@ -107,7 +107,7 @@ class TimeMasking(object):
         tau  = img.size(3)
         t    = np.random.randint(0, self.T)
         t0   = np.random.randint(0, tau-t)
-        img[:,:,:,t0:t0+t].fill_(0)        
+        img[:,:,:,t0:t0+t].fill_(0.)        
         return img
 
 class PitchShifting(object):

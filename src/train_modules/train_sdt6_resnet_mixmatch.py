@@ -54,7 +54,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         x_mix_data, x_mix_label, u_mix_data, u_mix_label = Mixmatch(labeled_data=x_unmix_data,
                                                                     labeled_label=target_Var[:, BATCH_SIZE*step:BATCH_SIZE*(step+1), :],
                                                                     unlabeled_data=u_unmix_data,
-                                                                    current_model=onDec,
+                                                                    curr_model=onDec,
                                                                     device=device
                                                                     )
         
@@ -109,7 +109,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
 
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
-             current_model,
+             curr_model,
              device,
              TSA_bool=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
@@ -123,22 +123,25 @@ def Mixmatch(labeled_data, labeled_label,
     # labeled_label  shape: (10, 6)
     # unlabeled_data shape: (10, 9, 174, 19)
     
-    curr_model = copy.deepcopy(current_model).eval() # avoid influencing gradient calculations
+    #curr_model = copy.deepcopy(current_model).eval() # avoid influencing gradient calculations
     
     transform  = transform_method(transform_dict)
     
     aug_x = transform(labeled_data).to(device)
-    labeled_label = labeled_label[0].to(device)
+    labeled_label = labeled_label[0].to(device, non_blocking=True)
     aug_u = []
     label = None
-    for k in range(augment_time):
-        aug_u_k = transform(unlabeled_data).to(device)
-        aug_u.append(aug_u_k)
-        if len(aug_u) == 1:
-            label = curr_model(aug_u_k)
-        else:
-            label += curr_model(aug_u_k)
-    label /= augment_time
+    with torch.no_grad():
+        for k in range(augment_time):
+            aug_u_k = transform(unlabeled_data).to(device)
+            aug_u.append(aug_u_k)
+            if len(aug_u) == 1:
+                label = curr_model(aug_u_k)
+            else:
+                label += curr_model(aug_u_k)
+        label /= augment_time
+        label = Sharpen(label, sharpening_temp)
+        label = label.detach()
     # label shape: (10, 6)
     
     if TSA_bool:
@@ -147,7 +150,7 @@ def Mixmatch(labeled_data, labeled_label,
         label = label[accept_label]
         aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
     
-    label = Sharpen(label, sharpening_temp)
+    
     
     stack_data  = torch.cat((aug_x, *aug_u), dim=0)
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
@@ -162,18 +165,17 @@ def Mixmatch(labeled_data, labeled_label,
     return x_mix_data, x_mix_label, u_mix_data, u_mix_label
 
 def Sharpen(dist, T):
-    sharpen_dist = dist
-    for i in range(sharpen_dist.size(0)):
-        sharpen_dist[i] = ( sharpen_dist[i]**(1./T) )/torch.sum( sharpen_dist[i]**(1./T) )
+    sharpen_dist = dist ** (1./T)
+    sharpen_dist = sharpen_dist / sharpen_dist.sum(dim=1, keepdim=True)
     return sharpen_dist
 
 def Mixup(data, label,
           unlabel_data, unlabel_label,
           alpha):
     lam = np.random.beta(alpha, alpha)
-    lam = max(lam, 1-lam)
-    mixed_data  = lam*data  + (1-lam)*unlabel_data
-    mixed_label = lam*label + (1-lam)*unlabel_label
+    lam = max(lam, 1.-lam)
+    mixed_data  = lam*data  + (1.-lam)*unlabel_data
+    mixed_label = lam*label + (1.-lam)*unlabel_label
     return mixed_data, mixed_label
 
 class TSA(object):
