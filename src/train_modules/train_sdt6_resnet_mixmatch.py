@@ -52,7 +52,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         random_position = torch.randperm(unlabel_time_step-1-window_size)[:BATCH_SIZE]
         u_unmix_data = torch.stack([ unlabel_t[0, :, :, random_position[i]:random_position[i]+window_size] for i in range(BATCH_SIZE)], dim=0)
         x_mix_data, x_mix_label, u_mix_data, u_mix_label = Mixmatch(labeled_data=x_unmix_data,
-                                                                    labeled_label=target_Var[:, BATCH_SIZE*step:BATCH_SIZE*(step+1), :],
+                                                                    labeled_label=target_Var[:, step:step+BATCH_SIZE],
                                                                     unlabeled_data=u_unmix_data,
                                                                     curr_model=onDec,
                                                                     device=device
