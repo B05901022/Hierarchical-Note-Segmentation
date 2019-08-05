@@ -155,6 +155,9 @@ def Mixmatch(labeled_data, labeled_label,
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
     print('stack_data shape', stack_data.shape)
     print('stack_label shape', stack_label.shape)
+    print('labeled_label shape', labeled_label.shape)
+    print('label shape', label.shape)
+    print('augment_time', augment_time)
     print('aug_x shape', aug_x.shape)
     
     shuffle = torch.randperm(stack_data.size(0))
