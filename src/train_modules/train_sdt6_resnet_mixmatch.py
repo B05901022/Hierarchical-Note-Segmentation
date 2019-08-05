@@ -161,7 +161,7 @@ def Mixmatch(labeled_data, labeled_label,
     #print('augment_time', augment_time)
     #print('aug_x shape', aug_x.shape)
     
-    shuffle = torch.randperm(stack_data.size(0))
+    shuffle = torch.arange(stack_data.size(0))#torch.randperm(stack_data.size(0))
     #print(shuffle.shape)
     #print('shuffle', shuffle)
     #print('processing x')
