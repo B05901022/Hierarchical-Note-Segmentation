@@ -104,19 +104,12 @@ with open(on_data_file, 'r') as fd1:
     with open(on_ans_file, 'r') as fa1:
         on_data_np = np.loadtxt(fd1)
         on_data_np = np.transpose(on_data_np)
-        #off_data_np = np.loadtxt(fd2)
-        #off_data_np = np.transpose(off_data_np)
         on_ans_np = np.loadtxt(fa1, delimiter=',')
-        #off_ans_np = np.loadtxt(fa2, delimiter=',')
         min_row = on_ans_np.shape[0] if (on_ans_np.shape[0] < on_data_np.shape[0]) else on_data_np.shape[0]
         on_data_np = on_data_np[:min_row].reshape((1, -1, int(args.feat_num1), 174)).transpose((0,2,3,1)) #
-        #off_data_np = off_data_np[:min_row].reshape((1,-1))
         on_ans_np = on_ans_np[:min_row].reshape((1,-1))
-        #off_ans_np = off_ans_np[:min_row].reshape((1,-1))
-        on_data = torch.from_numpy(on_data_np).type(torch.FloatTensor).to(device)
-        #off_data = torch.from_numpy(off_data_np).type(torch.FloatTensor).to(device)
-        on_ans = torch.from_numpy(on_ans_np).type(torch.FloatTensor).to(device)
-        #off_ans = torch.from_numpy(off_ans_np).type(torch.LongTensor).to(device)
+        on_data = torch.from_numpy(on_data_np).type(torch.FloatTensor)
+        on_ans = torch.from_numpy(on_ans_np).type(torch.FloatTensor)
 
 #train data
 train_loader = data_utils.DataLoader(
@@ -153,17 +146,13 @@ else:
     on_dec_optimizer.load_state_dict(torch.load(on_dec_model_train_file+'.optim'))
     #on_dec_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(on_dec_optimizer,T_max=30, last_epoch=EPOCH*PRESENT_EPOCH-1)
 
-#on_note_decoder.to(device)
 
 note_decoders = [on_note_decoder]
 
-#on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)
 
 dec_optimizers = [on_dec_optimizer]
 
 on_loss_func = torch.nn.BCELoss() # maybe should try crossentropy: CrossEntropyLoss()
-#on_loss_func = torch.nn.CrossEntropyLoss() # maybe should try crossentropy: CrossEntropyLoss()
-#off_loss_func = torch.nn.CrossEntropyLoss() # maybe should try crossentropy: CrossEntropyLoss()
 
 loss_funcs = [on_loss_func]
 
