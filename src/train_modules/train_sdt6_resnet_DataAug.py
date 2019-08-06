@@ -80,12 +80,12 @@ def train_resnet_4loss_DataAug(input_t, target_Var, decoders, dec_opts, device,
 
 def DataAug(labeled_data, labeled_label, device, 
             transform_dict={'cutout'    :False, #{'n_holes':1, 'height':50, 'width':5}, 
-                            'freq_mask' :False, #{'freq_mask_param':100},
+                            'freq_mask' :{'freq_mask_param':100},
                             'time_mask' :False, #{'time_mask_param':5},
                             'pitchshift':{'shift_range':48},
                             'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
                             },
-            MixUp_bool=True, beta_dist_alpha=0.75, # MixUp
+            MixUp_bool=False, beta_dist_alpha=0.75, # MixUp
             ):
     
     # labeled_data   shape: (10, 9, 174, 19)
