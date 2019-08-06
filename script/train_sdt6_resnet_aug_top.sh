@@ -22,6 +22,6 @@ mkdir -p log
 
 echo -e "Saving Record to ${LOG_FILE}"
 
-bash script/train_TONAS_sdt6_resnet.sh ${SIZE_LR} ${HS1} ${HL1} ${WS} ${SE} ${BIDIR1} ${NORM} ${BATCH} ${FEAT1} ${FEAT_NUM1} ${START_EPOCH} ${END_EPOCH} | tee ${LOG_FILE}
+bash script/train_TONAS_sdt6_resnet_aug.sh ${SIZE_LR} ${HS1} ${HL1} ${WS} ${SE} ${BIDIR1} ${NORM} ${BATCH} ${FEAT1} ${FEAT_NUM1} ${START_EPOCH} ${END_EPOCH} | tee ${LOG_FILE}
 
 echo -e "Saving Record to ${LOG_FILE}"

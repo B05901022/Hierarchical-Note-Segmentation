@@ -27,9 +27,13 @@ For training, you can change hyper-parameters in the scripts **train_sdt6_resnet
 ```
 bash script/train_sdt6_resnet_top.sh
 ```
-- For training resnet-18 with semi-supervised learning
+- For training resnet-18 with semi-supervised learning (Not Done)
 ```
 bash script/train_sdt6_resnet_semi_top.sh
+```
+- For training resnet-18 with Data Augmentation (Not Done)
+```
+bash script/train_sdt6_resnet_aug_top.sh
 ```
 - For training rnn-attn-19
 ```
