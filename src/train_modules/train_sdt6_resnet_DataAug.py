@@ -79,7 +79,7 @@ def train_resnet_4loss_DataAug(input_t, target_Var, decoders, dec_opts, device,
     return totLoss / input_time_step
 
 def DataAug(labeled_data, labeled_label, device, 
-            transform_dict={'cutout'    :False, #{'n_holes':1, 'height':50, 'width':5}, 
+            transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
                             'freq_mask' :False, #{'freq_mask_param':100},
                             'time_mask' :False, #{'time_mask_param':5},
                             'pitchshift':False, #{'shift_range':48},
