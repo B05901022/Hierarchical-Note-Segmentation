@@ -85,7 +85,7 @@ def DataAug(labeled_data, labeled_label, device,
                             'pitchshift':{'shift_range':48},
                             'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
                             },
-            MixUp_bool=False, beta_dist_alpha=0.75, # MixUp
+            MixUp_bool=True, beta_dist_alpha=0.75, # MixUp
             ):
     
     # labeled_data   shape: (10, 9, 174, 19)
