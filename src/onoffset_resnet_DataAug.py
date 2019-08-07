@@ -126,8 +126,8 @@ num_fout = resnet18.conv1.out_channels
 resnet18.conv1 = nn.Conv2d(int(args.feat_num1//3), num_fout, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 """
-resnet18 = ResNet_ShakeDrop_9(depth=18, shakedrop=False)
-#resnet18 = PyramidNet_ShakeDrop_MaxPool(depth=44, shakedrop=True, alpha=270)
+#resnet18 = ResNet_ShakeDrop_9(depth=18, shakedrop=False)
+resnet18 = PyramidNet_ShakeDrop_MaxPool_9(depth=110, shakedrop=True, alpha=270)
 
 #----------------------------
 # Model Initialize
