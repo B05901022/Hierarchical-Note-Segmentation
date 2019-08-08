@@ -493,8 +493,8 @@ resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 
 onDec = resnet18
 """
-onDec = ResNet_ShakeDrop_9(depth=18, shakedrop=False)
-#onDec = PyramidNet_ShakeDrop_MaxPool(depth=44, shakedrop=True, alpha=270)
+#onDec = ResNet_ShakeDrop_9(depth=18, shakedrop=False)
+onDec = PyramidNet_ShakeDrop_MaxPool_9(depth=110, shakedrop=True, alpha=270)
 
 onDec.load_state_dict(torch.load(on_dec_model_file))
 
