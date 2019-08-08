@@ -102,6 +102,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
             target_T = torch.max(u_mix_label[:,i, 3], u_mix_label[:,i, 5])
             onLoss += unlabel_lambda * u_LossFunc(onDecOut4_u[i].view(1, 3), torch.cat((u_mix_label[:,i, :2].contiguous().view(1, 2), 
                                                   target_T.contiguous().view(1, 1)), 1))
+            
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
@@ -114,30 +115,30 @@ def Mixmatch(labeled_data, labeled_label,
              curr_model,
              device,
              TSA_bool=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
-             transform_dict={'cutout'    :{'n_holes':1, 'height':50, 'width':5}, 
-                             'freq_mask' :False, # {'freq_mask_param':100}
-                             'time_mask' :False, # {'time_mask_param':5}
-                             'pitchshift':False, #{'shift_range':48},
+             transform_dict={'cutout'    :False, #{'n_holes':1, 'height':50, 'width':5}, 
+                             'freq_mask' :False, #{'freq_mask_param':100},
+                             'time_mask' :False, #{'time_mask_param':5},
+                             'pitchshift':{'shift_range':48}, 
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
              sharpening_temp=0.5, augment_time=2, beta_dist_alpha=0.75):
+    
     # labeled_data   shape: (10, 9, 174, 19)
     # labeled_label  shape: (10, 6)
     # unlabeled_data shape: (10, 9, 174, 19)
     
-    #curr_model = copy.deepcopy(current_model).eval() # avoid influencing gradient calculations
-    
+    # --- Setup Augmentation Methods ---
     transform  = transform_method(transform_dict)
     
     # --- Normalization ---
-    
     labeled_data   = Normalize(labeled_data)
     unlabeled_data = Normalize(unlabeled_data)
     
-    # ---------------------
+    # --- Labeled Augmentation ---
+    aug_x = transform(labeled_data)
+    labeled_label = labeled_label[0]
     
-    aug_x = transform(labeled_data).to(device)
-    labeled_label = labeled_label[0].to(device, non_blocking=True)
+    # --- Unlabeled Augmentation ---
     aug_u = []
     label = None
     with torch.no_grad():
@@ -150,36 +151,31 @@ def Mixmatch(labeled_data, labeled_label,
                 label += F.softmax(curr_model(aug_u_k), dim=1)
         label /= augment_time
         label = Sharpen(label, sharpening_temp)
-    # label shape: (10, 6)
     
+    # --- TSA ---
     if TSA_bool:
         tsa_detect = TSA(total_timestep, TSA_k, TSA_schedule)
         accept_label = tsa_detect(label, curr_timestep)
         label = label[accept_label]
         aug_u = aug_u[torch.stack([accept_label*(i+1) for i in range(augment_time)])]   
+        
+    # --- CUDA ---
+    aug_x  = aug_x.to(device)
+    labeled_label = labeled_label.to(device, non_blocking=True)
     
+    # --- Mixing Data ---
     stack_data  = torch.cat((aug_x, *aug_u), dim=0)
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
-    #print(stack_label)
-    #print('stack_data shape', stack_data.shape)
-    #print('stack_label shape', stack_label.shape)
-    #print('labeled_label shape', labeled_label.shape)
-    #print('label shape', label.shape)
-    #print('augment_time', augment_time)
-    #print('aug_x shape', aug_x.shape)
     
-    shuffle = torch.arange(stack_data.size(0))#torch.randperm(stack_data.size(0))
-    #print(shuffle.shape)
-    #print('shuffle', shuffle)
-    #print('processing x')
+    # --- MixUp ---
+    shuffle = torch.arange(stack_data.size(0))
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
                                       beta_dist_alpha)
-    #print('processing u')
     u_mix_data, u_mix_label   = Mixup(torch.cat(aug_u, dim=0), torch.cat([label for i in range(augment_time)], dim=0), 
                                       stack_data[shuffle[aug_x.size(0):]], stack_label[shuffle[aug_x.size(0):]],
                                       beta_dist_alpha)
-    #print()
+    
     return x_mix_data, x_mix_label, u_mix_data, u_mix_label
 
 def Normalize(data):
@@ -196,12 +192,6 @@ def Mixup(data, label,
           alpha):
     lam = np.random.beta(alpha, alpha)
     lam = max(lam, 1.-lam)
-    #print('data shape', data.shape)
-    #print('unlabel_data shape', unlabel_data.shape)
-    #print(lam)
-    #print((1.-lam))
-    #print('lam*data shape', (lam*data).shape)
-    #print('(1.-lam)*unlabel_data shape', ((1.-lam)*unlabel_data).shape)
     mixed_data  = lam*data  + (1.-lam)*unlabel_data
     mixed_label = lam*label + (1.-lam)*unlabel_label
     return mixed_data, mixed_label
