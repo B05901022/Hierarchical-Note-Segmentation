@@ -136,13 +136,13 @@ if PRESENT_FILE == 1 and PRESENT_EPOCH == 0:
     print("Re-initialize Deep LSTM Module...")
     on_note_decoder = resnet18
     on_note_decoder.to(device)
-    on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)#AdamW(on_note_decoder.parameters(), lr=LR)
+    on_dec_optimizer = AdamW(on_note_decoder.parameters(), lr=LR)#AdamW(on_note_decoder.parameters(), lr=LR)
     #on_dec_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(on_dec_optimizer,T_max=30, last_epoch=-1)
 else:
     on_note_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(on_dec_model_train_file))
     on_note_decoder.to(device)
-    on_dec_optimizer = torch.optim.Adam(on_note_decoder.parameters(), lr=LR)#AdamW(on_note_decoder.parameters(), lr=LR)#
+    on_dec_optimizer = AdamW(on_note_decoder.parameters(), lr=LR)#AdamW(on_note_decoder.parameters(), lr=LR)#
     on_dec_optimizer.load_state_dict(torch.load(on_dec_model_train_file+'.optim'))
     #on_dec_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(on_dec_optimizer,T_max=30, last_epoch=EPOCH*PRESENT_EPOCH-1)
 
