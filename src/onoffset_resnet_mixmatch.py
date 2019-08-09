@@ -17,12 +17,13 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
-device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop, PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
 from model_extend.AdamW import AdamW
 from train_modules.train_sdt6_resnet_mixmatch import train_resnet_4loss_mixmatch
+from train_modules.train_sdt6_resnet_DataAug import train_resnet_4loss_DataAug
 import os
 
 #----------------------------
@@ -194,11 +195,16 @@ for epoch in range(EPOCH):
         
         # b_x1 shape: (1,9,174,songlength)
         # b_y1 shape: (1,songlength,6)
-
-        loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, device,
-                                           loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
-                                           BATCH_SIZE, k=WINDOW_SIZE,
-                                           unlabel_t=b_u1, unlabel_lambda=100.0)
+        
+        if PRESENT_EPOCH > 10:
+            loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, device,
+                                               loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
+                                               BATCH_SIZE, k=WINDOW_SIZE,
+                                               unlabel_t=b_u1, unlabel_lambda=100.0)
+        else:
+            loss = train_resnet_4loss_DataAug(b_x1, b_y1, note_decoders, dec_optimizers, device,
+                                              loss_funcs, INPUT_SIZE1, OUTPUT_SIZE,
+                                              BATCH_SIZE, k=WINDOW_SIZE)
 
         total_loss += loss
         loss_count += 1
@@ -230,6 +236,10 @@ for epoch in range(EPOCH):
 #torch.save(note_encoders[0].state_dict(), on_enc_model_train_file)
 torch.save(note_decoders[0].state_dict(), on_dec_model_train_file)
 torch.save(dec_optimizers[0].state_dict(), on_dec_model_train_file+'.optim')
+
+if PRESENT_EPOCH == 10:
+    torch.save(note_decoders[0].state_dict(), on_dec_model_train_file+'_10')
+    torch.save(dec_optimizers[0].state_dict(), on_dec_model_train_file+'_10.optim')
 
 if PRESENT_EPOCH == 0 and PRESENT_FILE == 1:
     print("Re-initialize Loss Record File ...")
