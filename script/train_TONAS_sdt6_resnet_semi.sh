@@ -2,7 +2,7 @@
 
 DHEAD="data/TONAS_note/${9}/"
 AHEAD1="ans/TONAS_SDT6/sdt6_"
-UHEAD="data/TONAS_note/${9}/" #"data/Feat/"
+UHEAD="data/Feat/" #
 BASE_LR=0.001
 SIZE_LR=$1
 LR=$(echo "${BASE_LR} * ${SIZE_LR}" | bc)
