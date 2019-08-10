@@ -196,7 +196,7 @@ for epoch in range(EPOCH):
         # b_x1 shape: (1,9,174,songlength)
         # b_y1 shape: (1,songlength,6)
         
-        if PRESENT_EPOCH > 10:
+        if PRESENT_EPOCH > 9:
             loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, device,
                                                loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
                                                BATCH_SIZE, k=WINDOW_SIZE,
@@ -237,7 +237,7 @@ for epoch in range(EPOCH):
 torch.save(note_decoders[0].state_dict(), on_dec_model_train_file)
 torch.save(dec_optimizers[0].state_dict(), on_dec_model_train_file+'.optim')
 
-if PRESENT_EPOCH == 10:
+if PRESENT_EPOCH == 9 and PRESENT_FILE == 82:
     torch.save(note_decoders[0].state_dict(), on_dec_model_train_file+'_10')
     torch.save(dec_optimizers[0].state_dict(), on_dec_model_train_file+'_10.optim')
 
