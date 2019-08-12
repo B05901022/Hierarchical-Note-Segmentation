@@ -16,7 +16,7 @@ FEAT_NUM1=9
 START_EPOCH=0 #
 END_EPOCH=20 #80
 
-PRETRAIN=True #
+PRETRAIN=False #
 
 LOG_FILE="log/sdt6_resnet_pyramidnet44shakedropfixoptim_${NORM}${WS}_l${HL1}h${HS1}b${BIDIR1}_e${END_EPOCH}b${BATCH}_${FEAT1}_sample.log"
 
