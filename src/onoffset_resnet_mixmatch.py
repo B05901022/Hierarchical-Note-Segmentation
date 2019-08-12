@@ -166,7 +166,7 @@ elif PRESENT_FILE == 1 and PRESENT_EPOCH == 10 and PRETRAIN_BOOL:
     on_not_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(PRETRAIN_DEST))
     on_note_decoder.to(device)
-    on_dec_optimizer = Adam(on_not_decoder.parameters(), lr=LR)
+    on_dec_optimizer = AdamW(on_note_decoder.parameters(), lr=LR)
     on_dec_optimizer.load_state_dict(torch.load(PRETRAIN_DEST+'.optim'))
 else:
     on_note_decoder = resnet18
