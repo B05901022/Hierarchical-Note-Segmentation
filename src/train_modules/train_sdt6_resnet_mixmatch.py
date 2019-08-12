@@ -65,9 +65,9 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
                                                                     )
         
         x_mix_data = Variable(x_mix_data)
-        u_mix_data = Variable(u_mix_data)
+        #u_mix_data = Variable(u_mix_data)
         x_mix_label = Variable(x_mix_label.unsqueeze(0))
-        u_mix_label = Variable(u_mix_label.unsqueeze(0))
+        #u_mix_label = Variable(u_mix_label.unsqueeze(0))
         
         # === Labeled ===
         #input_Var shape: (10,3,522,19)
@@ -80,6 +80,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
         
         # === Unlabeled ===
+        """
         onDecOut6_u = onDec(u_mix_data)
         onDecOut1_u = nn_softmax(onDecOut6_u[:, :2])
         onDecOut2_u = nn_softmax(onDecOut6_u[:, 2:4])
@@ -87,7 +88,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         temp_t = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
         onDecOut4_u = torch.cat((onDecOut1_u, temp_t), dim=1)
-        
+        """
         for i in range(BATCH_SIZE):
             
             # === Labeled ===
@@ -99,6 +100,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
                                      target_T.contiguous().view(1, 1)), 1))
             
             # === Unlabeled ===
+            """
             # Add L2 loss for unlabeled data
             unsup_Loss += unlabel_lambda * u_LossFunc(onDecOut1_u[i].view(1, 2), u_mix_label[:,i, :2].contiguous().view(1, 2))
             unsup_Loss += unlabel_lambda * u_LossFunc(onDecOut2_u[i].view(1, 2), u_mix_label[:,i, 2:4].contiguous().view(1, 2))
@@ -106,9 +108,10 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
             target_T = torch.max(u_mix_label[:,i, 3], u_mix_label[:,i, 5])
             unsup_Loss += unlabel_lambda * u_LossFunc(onDecOut4_u[i].view(1, 3), torch.cat((u_mix_label[:,i, :2].contiguous().view(1, 2), 
                                                       target_T.contiguous().view(1, 1)), 1))
+            """
         
-        print('supervised_Loss: ', super_Loss.item() / input_time_step, 'unsupervised_Loss: ', unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time), end='\r')
-        onLoss = super_Loss + unsup_Loss
+        print('supervised_Loss: ', super_Loss.item() / input_time_step) #, 'unsupervised_Loss: ', unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time), end='\r')
+        onLoss = super_Loss #+ unsup_Loss
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
