@@ -21,12 +21,16 @@ TRAINCOUNT=71
 START_EPOCH=${11}
 END_EPOCH=${12}
 
+PRETRAIN=${13}
+
 MDIR="model/sdt6_resnet_${NORM}${WS}_l${HL1}h${HS1}b${BIDIR1}_e${END_EPOCH}b${BATCH}_${FEAT1}_sample"
 EMFILE1="${MDIR}/onoffset_attn_${NORM}_onenc_k${WS}l${HL1}h${HS1}b${BIDIR1}e${END_EPOCH}b${BATCH}_${FEAT1}"
 DMFILE1="${MDIR}/onoffset_attn_${NORM}_ondec_k${WS}l${HL1}h${HS1}b${BIDIR1}e${END_EPOCH}b${BATCH}_${FEAT1}"
 TREMFILE1="${MDIR}/onoffset_attn_${NORM}_onenc_k${WS}l${HL1}h${HS1}b${BIDIR1}e${END_EPOCH}b${BATCH}_${FEAT1}_train"
 TRDMFILE1="${MDIR}/onoffset_attn_${NORM}_ondec_k${WS}l${HL1}h${HS1}b${BIDIR1}e${END_EPOCH}b${BATCH}_${FEAT1}_train"
 LFILE="loss/sdt6_resnet50_onoffset_attn_${NORM}${WS}_l${HL1}h${HS1}b${BIDIR1}_e${END_EPOCH}b${BATCH}_${FEAT1}_sample.csv"
+
+PRETRAINFILE="baseline_models/PyramidNet_FreqMask_PitchShift_Baseline"
 
 BUCKETLIST=('' '5' '8' '29' '6' '14' '31' '18' '1' '7' '16' '3' '4' '11' '67' '9' '41' '12' '28' '2' '72' '21' '79' '36' '81' '45' '56' '76' '42' '74' '27' '63' '33' '44' '40' '38' '25' '59' '46' '52' '32' '30' '53' '71' '80' '50' '58' '57' '37' '61' '65' '73' '39' '47' '24' '82' '51' '34' '66' '43' '78' '49' '69' '75' '35' '70' '54' '48' '68' '26' '77' '64' '62' '13' '10' '60' '55' '15' '17' '19' '20' '22' '23' '0')
 
@@ -50,7 +54,7 @@ do
         -dm1 ${DMFILE1} -p ${num} -e ${e} -l ${LR} \
         --hs1 ${HS1} --hl1 ${HL1} --window-size ${WS} --single-epoch ${SE} --bi1 ${BIDIR1} \
         --loss-record ${LFILE} --batch-size ${BATCH} --norm ${NORM} --feat1 ${FEAT_NUM1} \
-        -emt1 ${TREMFILE1} -dmt1 ${TRDMFILE1} -u1 ${UHEAD}
+        -emt1 ${TREMFILE1} -dmt1 ${TRDMFILE1} -u1 ${UHEAD} -pretrain_model ${PRETRAIN} -pretrain_dest ${PRETRAINFILE}
     done
     
 done
