@@ -52,7 +52,7 @@ parser.add_argument("--loss-record", help="loss record file position", dest="lfi
 
 parser.add_argument("-u1", help="unlabeled data file 1 position", dest="u1dir", default="udata.npy", type=str)
 parser.add_argument("-pretrain_model", help="use pretrained model of 10 epochs", dest="premod", default=False, type=bool)
-parser.add_argument("-pretrain_dest", help"destination of pretrained model", dest="predest", default="baseline_models/PyramidNet_FreqMask_PitchShift_Baseline")
+parser.add_argument("-pretrain_dest", help="destination of pretrained model", dest="predest", default="baseline_models/PyramidNet_FreqMask_PitchShift_Baseline", type=str)
 
 args = parser.parse_args()
 
