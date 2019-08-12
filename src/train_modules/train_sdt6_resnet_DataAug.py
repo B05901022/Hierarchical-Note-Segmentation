@@ -71,10 +71,13 @@ def train_resnet_4loss_DataAug(input_t, target_Var, decoders, dec_opts, device,
             onLoss += onLossFunc(onDecOut4[i].view(1, 3), torch.cat((x_label[:,i, :2].contiguous().view(1, 2), 
                                  target_T.contiguous().view(1, 1)), 1))
             
+        print('supervised_Loss: ', onLoss.item(), end='\r')
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
         totLoss += onLoss.item()
+        
+    print()
     
     return totLoss / input_time_step
 

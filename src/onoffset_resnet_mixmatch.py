@@ -51,6 +51,7 @@ parser.add_argument("--norm", help="normalization layer type", choices=["bn","ln
 parser.add_argument("--loss-record", help="loss record file position", dest="lfile", default="loss.npy", type=str)
 
 parser.add_argument("-u1", help="unlabeled data file 1 position", dest="u1dir", default="udata.npy", type=str)
+parser.add_argument("-pretrain_model", help="use pretrained model of 10 epochs", dest="premod", default=False, type=bool)
 
 args = parser.parse_args()
 
@@ -156,6 +157,7 @@ if PRESENT_FILE == 1 and PRESENT_EPOCH == 0:
     on_note_decoder.to(device)
     on_dec_optimizer = AdamW(on_note_decoder.parameters(), lr=LR)#AdamW(on_note_decoder.parameters(), lr=LR)
     #on_dec_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(on_dec_optimizer,T_max=30, last_epoch=-1)
+elif PRESENT_FILE == 1 and PRESENT_EPOCH == 10
 else:
     on_note_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(on_dec_model_train_file))
