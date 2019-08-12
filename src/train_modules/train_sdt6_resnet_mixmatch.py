@@ -116,10 +116,8 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         onLoss.backward()
         onDecOpt.step()
         totLoss += onLoss.item()
-        
-    print()
     
-    return totLoss / total_time_step #input_time_step
+    return totLoss / input_time_step #total_time_step
 
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
