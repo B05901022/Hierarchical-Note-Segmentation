@@ -163,7 +163,7 @@ if PRESENT_FILE == 1 and PRESENT_EPOCH == 0:
     #on_dec_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(on_dec_optimizer,T_max=30, last_epoch=-1)
 elif PRESENT_FILE == 1 and PRESENT_EPOCH == 10 and PRETRAIN_BOOL:
     print("Using pretrain PyramidNet model...")
-    on_not_decoder = resnet18
+    on_note_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(PRETRAIN_DEST))
     on_note_decoder.to(device)
     on_dec_optimizer = AdamW(on_note_decoder.parameters(), lr=LR)
