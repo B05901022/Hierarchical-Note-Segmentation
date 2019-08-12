@@ -52,6 +52,7 @@ parser.add_argument("--loss-record", help="loss record file position", dest="lfi
 
 parser.add_argument("-u1", help="unlabeled data file 1 position", dest="u1dir", default="udata.npy", type=str)
 parser.add_argument("-pretrain_model", help="use pretrained model of 10 epochs", dest="premod", default=False, type=bool)
+parser.add_argument("-pretrain_dest", help"destination of pretrained model", dest="predest", default="baseline_models/PyramidNet_FreqMask_PitchShift_Baseline")
 
 args = parser.parse_args()
 
@@ -89,6 +90,9 @@ PATIENCE = 700
 
 PRESENT_FILE = args.present_file
 PRESENT_EPOCH = args.present_epoch
+
+PRETRAIN_BOOL = args.premod
+PRETRAIN_DEST = args.predest
 
 #----------------------------
 # Data Collection
@@ -152,12 +156,18 @@ resnet18 = PyramidNet_ShakeDrop_MaxPool_9(depth=110, shakedrop=True, alpha=270)
 # Model Initialize
 #----------------------------
 if PRESENT_FILE == 1 and PRESENT_EPOCH == 0:
-    print("Re-initialize Deep LSTM Module...")
+    print("Re-initialize PyramidNet Module...")
     on_note_decoder = resnet18
     on_note_decoder.to(device)
     on_dec_optimizer = AdamW(on_note_decoder.parameters(), lr=LR)#AdamW(on_note_decoder.parameters(), lr=LR)
     #on_dec_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(on_dec_optimizer,T_max=30, last_epoch=-1)
-elif PRESENT_FILE == 1 and PRESENT_EPOCH == 10
+elif PRESENT_FILE == 1 and PRESENT_EPOCH == 10 and PRETRAIN_BOOL:
+    print("Using pretrain PyramidNet model...")
+    on_not_decoder = resnet18
+    on_note_decoder.load_state_dict(torch.load(PRETRAIN_DEST))
+    on_note_decoder.to(device)
+    on_dec_optimizer = Adam(on_not_decoder.parameters(), lr=LR)
+    on_dec_optimizer.load_state_dict(torch.load(PRETRAIN_DEST+'.optim'))
 else:
     on_note_decoder = resnet18
     on_note_decoder.load_state_dict(torch.load(on_dec_model_train_file))
