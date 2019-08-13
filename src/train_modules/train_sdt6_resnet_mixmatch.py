@@ -125,7 +125,7 @@ def Mixmatch(labeled_data, labeled_label,
              device,
              TSA_bool=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :False, #{'n_holes':1, 'height':50, 'width':5}, 
-                             'freq_mask' :{'freq_mask_param':100},
+                             'freq_mask' :False, #{'freq_mask_param':100},
                              'time_mask' :False, #{'time_mask_param':5},
                              'pitchshift':{'shift_range':48}, 
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
@@ -154,10 +154,17 @@ def Mixmatch(labeled_data, labeled_label,
         for k in range(augment_time):
             aug_u_k = transform(unlabeled_data).to(device)
             aug_u.append(aug_u_k)
+            label_guess = curr_model(aug_u_k)
+            # --- Hierachical Label Guess ---
             if len(aug_u) == 1:
-                label = F.softmax(curr_model(aug_u_k), dim=1)
+                label = torch.cat((F.softmax(label_guess[:, :2], dim=1),
+                                   F.softmax(label_guess[:,2:4], dim=1),
+                                   F.softmax(label_guess[:,4: ], dim=1)), dim=1)
             else:
-                label += F.softmax(curr_model(aug_u_k), dim=1)
+                label += torch.cat((F.softmax(label_guess[:, :2], dim=1),
+                                    F.softmax(label_guess[:,2:4], dim=1),
+                                    F.softmax(label_guess[:,4: ], dim=1)), dim=1)
+            # --------------------------------
         label /= augment_time
         label = Sharpen(label, sharpening_temp)
     
@@ -193,7 +200,10 @@ def Normalize(data):
 
 def Sharpen(dist, T):
     sharpen_dist = dist ** (1./T)
-    sharpen_dist = sharpen_dist / sharpen_dist.sum(dim=1, keepdim=True)
+    #sharpen_dist = sharpen_dist / sharpen_dist.sum(dim=1, keepdim=True)
+    sharpen_dist[:, :2] = sharpen_dist[:, :2] / sharpen_dist[:, :2].sum(dim=1, keepdim=True)
+    sharpen_dist[:,2:4] = sharpen_dist[:,2:4] / sharpen_dist[:,2:4].sum(dim=1, keepdim=True)
+    sharpen_dist[:,4: ] = sharpen_dist[:,4: ] / sharpen_dist[:,4: ].sum(dim=1, keepdim=True)
     return sharpen_dist
 
 def Mixup(data, label,
