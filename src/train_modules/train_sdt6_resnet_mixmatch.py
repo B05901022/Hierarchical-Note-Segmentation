@@ -107,7 +107,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
             unsup_Loss += unlabel_lambda * u_LossFunc(onDecOut4_u[i].view(1, 3), torch.cat((u_mix_label[:,i, :2].contiguous().view(1, 2), 
                                                       target_T.contiguous().view(1, 1)), 1))
         
-        print('supervised_Loss: ', super_Loss.item() / input_time_step, 'unsupervised_Loss: ', unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time))
+        print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'unsupervised_Loss: %.10f' % (unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time)))
         onLoss = super_Loss + unsup_Loss
         onDecOpt.zero_grad()
         onLoss.backward()
