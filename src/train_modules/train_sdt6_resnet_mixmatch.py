@@ -78,6 +78,11 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         temp_t = torch.max(onDecOut2[:, 1], onDecOut3[:, 1]).view(-1,1)
         onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
+        print(onDecOut6.shape)
+        print(onDecOut1.shape)
+        print(onDecOut2.shape)
+        print(onDecOut3.shape)
+        print(onDecOut4.shape)
         
         # === Unlabeled ===
         onDecOut6_u = onDec(u_mix_data)
@@ -87,6 +92,11 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         temp_t = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
         onDecOut4_u = torch.cat((onDecOut1_u, temp_t), dim=1)
+        print(onDecOut6_u.shape)
+        print(onDecOut1_u.shape)
+        print(onDecOut2_u.shape)
+        print(onDecOut3_u.shape)
+        print(onDecOut4_u.shape)
         
         for i in range(BATCH_SIZE):
             
