@@ -65,9 +65,9 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
                                                                     )
         
         x_mix_data = Variable(x_mix_data)
-        #u_mix_data = Variable(u_mix_data)
+        u_mix_data = Variable(u_mix_data)
         x_mix_label = Variable(x_mix_label.unsqueeze(0))
-        #u_mix_label = Variable(u_mix_label.unsqueeze(0))
+        u_mix_label = Variable(u_mix_label.unsqueeze(0))
         
         # === Labeled ===
         #input_Var shape: (10,3,522,19)
@@ -78,11 +78,6 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         temp_t = torch.max(onDecOut2[:, 1], onDecOut3[:, 1]).view(-1,1)
         onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
-        print(onDecOut6.shape)
-        print(onDecOut1.shape)
-        print(onDecOut2.shape)
-        print(onDecOut3.shape)
-        print(onDecOut4.shape)
         
         # === Unlabeled ===
         onDecOut6_u = onDec(u_mix_data)
@@ -92,11 +87,6 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         temp_t = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
         onDecOut4_u = torch.cat((onDecOut1_u, temp_t), dim=1)
-        print(onDecOut6_u.shape)
-        print(onDecOut1_u.shape)
-        print(onDecOut2_u.shape)
-        print(onDecOut3_u.shape)
-        print(onDecOut4_u.shape)
         
         for i in range(BATCH_SIZE):
             
@@ -118,7 +108,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
                                                       target_T.contiguous().view(1, 1)), 1))
         
         print('supervised_Loss: ', super_Loss.item() / input_time_step, 'unsupervised_Loss: ', unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time))
-        onLoss = super_Loss #+ unsup_Loss
+        onLoss = super_Loss + unsup_Loss
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
