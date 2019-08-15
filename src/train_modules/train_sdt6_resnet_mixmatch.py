@@ -21,7 +21,7 @@ from train_modules.audio_augment import transform_method
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
-    unlabel_t, unlabel_lambda=1.0,
+    unlabel_t, unlabel_lambda=75.0,
     ):
     
     # input_t    shape: (1,3,522,data_length)
@@ -80,16 +80,16 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
         
         # === Unlabeled ===
+        """
         onDecOut6_u = onDec(u_mix_data)
         onDecOut1_u = nn_softmax(onDecOut6_u[:, :2])
         onDecOut2_u = nn_softmax(onDecOut6_u[:, 2:4])
         onDecOut3_u = nn_softmax(onDecOut6_u[:, 4:])
-        """
         temp_t2 = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
         onDecOut4_u = torch.cat((onDecOut1_u, temp_t2), dim=1)
+
+        #onDecOutT_u = torch.cat((onDecOut1_u, onDecOut2_u, onDecOut3_u), dim=1)
         """
-        onDecOutT_u = torch.cat((onDecOut1_u, onDecOut2_u, onDecOut3_u), dim=1)
-        
         for i in range(BATCH_SIZE):
             
             # === Labeled ===
@@ -101,26 +101,27 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
                                      target_T.contiguous().view(1, 1)), 1))
             
             # === Unlabeled ===
-            # Add L2 loss for unlabeled data (Hierachical)
             """
+            # Add L2 loss for unlabeled data (Hierachical)
             unsup_Loss += u_LossFunc(onDecOut1_u[i].view(1, 2), u_mix_label[:,i, :2].contiguous().view(1, 2))
             unsup_Loss += u_LossFunc(onDecOut2_u[i].view(1, 2), u_mix_label[:,i, 2:4].contiguous().view(1, 2))
             unsup_Loss += u_LossFunc(onDecOut3_u[i].view(1, 2), u_mix_label[:,i, 4:].contiguous().view(1, 2))
             target_T2 = torch.max(u_mix_label[:,i, 3], u_mix_label[:,i, 5])
             unsup_Loss += u_LossFunc(onDecOut4_u[i].view(1, 3), torch.cat((u_mix_label[:,i, :2].contiguous().view(1, 2), 
                                                       target_T2.contiguous().view(1, 1)), 1))
-            """
+            
             # Add L2 loss for unlabeled data
-            unsup_Loss += u_LossFunc(onDecOutT_u[i].view(1, 6), u_mix_label[:,i].contiguous().view(1, 6))
-        
-        print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'unsupervised_Loss: %.10f' % (unlabel_lambda * unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time)))
-        onLoss = super_Loss + unlabel_lambda * unsup_Loss
+            #unsup_Loss += u_LossFunc(onDecOutT_u[i].view(1, 6), u_mix_label[:,i].contiguous().view(1, 6))
+            """
+            
+        print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step)) #, 'unsupervised_Loss: %.10f' % (unlabel_lambda * unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time)))
+        onLoss = super_Loss # + unlabel_lambda * unsup_Loss
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
         totLoss += onLoss.item()
     
-    return totLoss / total_time_step #input_time_step 
+    return totLoss / input_time_step # total_time_step
 
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
@@ -128,7 +129,7 @@ def Mixmatch(labeled_data, labeled_label,
              device,
              TSA_bool=False, curr_timestep=0, total_timestep=0, TSA_k=6, TSA_schedule='exp', 
              transform_dict={'cutout'    :False, #{'n_holes':1, 'height':50, 'width':5}, 
-                             'freq_mask' :False, #{'freq_mask_param':100},
+                             'freq_mask' :{'freq_mask_param':100},
                              'time_mask' :False, #{'time_mask_param':5},
                              'pitchshift':{'shift_range':48}, 
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
@@ -187,7 +188,7 @@ def Mixmatch(labeled_data, labeled_label,
     stack_label = torch.cat((labeled_label, *augment_time*[label]), dim=0)
     
     # --- MixUp ---
-    shuffle = torch.arange(stack_data.size(0))
+    shuffle = torch.randperm(stack_data.size(0)) #torch.arange(stack_data.size(0))
     x_mix_data, x_mix_label   = Mixup(aug_x, labeled_label, 
                                       stack_data[shuffle[:aug_x.size(0)]], stack_label[shuffle[:aug_x.size(0)]],
                                       beta_dist_alpha)
