@@ -34,6 +34,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     onDecOpt    = dec_opts[0]
     onLossFunc  = loss_funcs[0] #CrossEntropyLoss_for_MixMatch()
     u_LossFunc  = nn.MSELoss()
+    enLossFunc  = EntropyLoss()
 
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
@@ -149,9 +150,9 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
                                                                   target_T.contiguous().view(-1, 1)), 1))     
         
         # === Entropy Minimization ===
-        super_Loss += EntropyLoss(onDecOut1.view(-1, 2), x_mix_label[:,  :2].contiguous().view(-1, 2))
-        super_Loss += EntropyLoss(onDecOut2.view(-1, 2), x_mix_label[:, 2:4].contiguous().view(-1, 2))
-        super_Loss += EntropyLoss(onDecOut3.view(-1, 2), x_mix_label[:, 4: ].contiguous().view(-1, 2))
+        super_Loss += enLossFunc(onDecOut1.view(-1, 2), x_mix_label[:,  :2].contiguous().view(-1, 2))
+        super_Loss += enLossFunc(onDecOut2.view(-1, 2), x_mix_label[:, 2:4].contiguous().view(-1, 2))
+        super_Loss += enLossFunc(onDecOut3.view(-1, 2), x_mix_label[:, 4: ].contiguous().view(-1, 2))
         
         # === Unlabeled ===
         # Add L2 loss for unlabeled data (Hierachical)
