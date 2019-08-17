@@ -98,7 +98,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         
         # --- Run Model ---
         onDecOut_mix = onDec(mix_data[:BATCH_SIZE]) ###
-        onDecOut6    = onDecOut_mix[:BATCH_SIZE] # labeled
+        onDecOut6    = onDecOut_mix#[:BATCH_SIZE] # labeled
         #onDecOut6_u  = onDecOut_mix[BATCH_SIZE:] # unlabeled
         
         # === labeled ===
