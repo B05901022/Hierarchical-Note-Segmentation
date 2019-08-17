@@ -148,6 +148,11 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         super_Loss += onLossFunc(onDecOut4.view(-1, 3), torch.cat((x_mix_label[:, :2].contiguous().view(-1, 2), 
                                                                   target_T.contiguous().view(-1, 1)), 1))     
         
+        # === Entropy Minimization ===
+        super_Loss += EntropyLoss(onDecOut1.view(-1, 2), x_mix_label[:,  :2].contiguous().view(-1, 2))
+        super_Loss += EntropyLoss(onDecOut2.view(-1, 2), x_mix_label[:, 2:4].contiguous().view(-1, 2))
+        super_Loss += EntropyLoss(onDecOut3.view(-1, 2), x_mix_label[:, 4: ].contiguous().view(-1, 2))
+        
         # === Unlabeled ===
         # Add L2 loss for unlabeled data (Hierachical)
         #unsup_Loss += u_LossFunc(onDecOut1_u.view(-1, 2), u_mix_label[:,  :2].contiguous().view(-1, 2))
@@ -156,6 +161,8 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         #target_T2 = torch.max(u_mix_label[:, 3], u_mix_label[:, 5])
         #unsup_Loss += u_LossFunc(onDecOut4_u.view(-1, 3), torch.cat((u_mix_label[:, :2].contiguous().view(-1, 2), 
         #                                                            target_T2.contiguous().view(-1, 1)), 1))
+        
+        
             
         print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step))#, 'unsupervised_Loss: %.10f' % (unlabel_lambda * unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time)))
         onLoss = super_Loss #+ unlabel_lambda * unsup_Loss
