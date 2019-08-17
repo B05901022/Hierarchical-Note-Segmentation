@@ -32,8 +32,8 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = loss_funcs[0] 
-    u_LossFunc  = torch.nn.MSELoss()
+    onLossFunc  = CrossEntropyLoss_for_MixMatch() #loss_funcs[0] 
+    u_LossFunc  = nn.MSELoss()
 
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
@@ -115,7 +115,6 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         onDecOut3_u = nn_softmax(onDecOut6_u[:, 4:])
         temp_t2 = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
         onDecOut4_u = torch.cat((onDecOut1_u, temp_t2), dim=1)
-        #onDecOutT_u = torch.cat((onDecOut1_u, onDecOut2_u, onDecOut3_u), dim=1)
         
         """
         # === Labeled ===
@@ -157,8 +156,6 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         target_T2 = torch.max(u_mix_label[:, 3], u_mix_label[:, 5])
         unsup_Loss += u_LossFunc(onDecOut4_u.view(-1, 3), torch.cat((u_mix_label[:, :2].contiguous().view(-1, 2), 
                                                                     target_T2.contiguous().view(-1, 1)), 1))
-        # Add L2 loss for unlabeled data
-        #unsup_Loss += u_LossFunc(onDecOutT_u.view(-1, 6), u_mix_label.contiguous().view(-1, 6))        
             
         print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'unsupervised_Loss: %.10f' % (unlabel_lambda * unsup_Loss.item() / (unlabel_time_step*unlabel_aug_time)))
         onLoss = super_Loss + unlabel_lambda * unsup_Loss
@@ -167,7 +164,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         onDecOpt.step()
         totLoss += onLoss.item()
     
-    return totLoss / total_time_step # input_time_step 
+    return totLoss / total_time_step #input_time_step
 
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
@@ -285,3 +282,14 @@ class TSA(object):
         false_tag = torch.gt(torch.max(label, dim=1)[0], threshold)
         right_tag = [i for i in range(false_tag.size(0)) if false_tag[i] == 0]
         return torch.Tensor(right_tag).long()
+    
+class EntropyLoss(nn.Module):
+    def __init__(self, entmin_weight=1.0):
+        super(EntropyLoss, self).__init__()
+        self.entmin_weight = entmin_weight
+    def forward(self, softmax_x):
+        return -self.entmin_weight * torch.mean(softmax_x * torch.log(softmax_x))  
+    
+class CrossEntropyLoss_for_MixMatch(object):
+    def __call__(self, softmax_x, target_x):
+        return -torch.mean(torch.sum(torch.log(softmax_x)*target_x,dim=1))
