@@ -26,7 +26,7 @@ def _l2_normalize(d):
 
 class VATLoss(nn.Module):
 
-    def __init__(self, xi=1e-6, eps=40.0, ip=1):
+    def __init__(self, xi=1e-6, eps=40.0, ip=2):
         """VAT loss
         :param xi: hyperparameter of VAT (default: 10.0)
         :param eps: hyperparameter of VAT (default: 1.0)
@@ -52,7 +52,7 @@ class VATLoss(nn.Module):
                 d.requires_grad_()
                 pred_hat = model(x + self.xi * d)
                 #logp_hat = F.softmax(pred_hat, dim=1)
-                logp_hat = F.softmax(pred_hat.view(3,10,2), dim=2).view(10,6)
+                logp_hat = F.log_softmax(pred_hat.view(3,10,2), dim=2).view(10,6)
                 adv_distance = F.kl_div(logp_hat, pred, reduction='batchmean')
                 adv_distance.backward()
                 d = _l2_normalize(d.grad)
@@ -61,7 +61,7 @@ class VATLoss(nn.Module):
             # calc LDS
             r_adv = d * self.eps
             pred_hat = model(x + r_adv)
-            logp_hat = F.softmax(pred_hat.view(3,10,2), dim=2).view(10,6)
+            logp_hat = F.log_softmax(pred_hat.view(3,10,2), dim=2).view(10,6)
             lds = F.kl_div(logp_hat, pred, reduction='batchmean')
 
         return lds
