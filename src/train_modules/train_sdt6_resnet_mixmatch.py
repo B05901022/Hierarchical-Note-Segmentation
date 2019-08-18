@@ -47,7 +47,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     totLoss = 0
 
     nn_softmax = nn.Softmax(dim=1)
-    print('unlabel_time_step:', unlabel_time_step)
+
     for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE): 
         
         # --- Loss ---
@@ -61,11 +61,12 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         random_position = torch.randperm(unlabel_time_step-1-window_size)[:BATCH_SIZE]
         try:
             print('1')
-            print(step)
             u_unmix_data = torch.stack([ unlabel_t[0, :, :, step+i-k:step+i-k+window_size] for i in range(BATCH_SIZE)], dim=0)
         except:
             print('2')
             u_unmix_data = torch.stack([ unlabel_t[0, :, :, random_position[i]:random_position[i]+window_size] for i in range(BATCH_SIZE)], dim=0)
+        
+        print(u_unmix_data.shape)
         
         # --- MixMatch/MixUp ---
         mix_data, x_mix_label, u_mix_label = Mixmatch(labeled_data=x_unmix_data,
