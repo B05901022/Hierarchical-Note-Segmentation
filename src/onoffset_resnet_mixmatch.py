@@ -211,7 +211,7 @@ for epoch in range(EPOCH):
         loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, device,
                                            loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
                                            BATCH_SIZE, k=WINDOW_SIZE,
-                                           unlabel_t=b_u1, unlabel_lambda=100.0)
+                                           unlabel_t=b_u1, unlabel_lambda=1.0)
         
         """
         if PRESENT_EPOCH > 9:
