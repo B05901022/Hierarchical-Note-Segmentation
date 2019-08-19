@@ -22,7 +22,7 @@ from train_modules.VAT import VATLoss
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
-    unlabel_t, unlabel_lambda=1.0,
+    unlabel_t, unlabel_lambda=10.0,
     ):
     
     # input_t    shape: (1,3,522,data_length)
@@ -34,7 +34,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
     onLossFunc  = loss_funcs[0] #CrossEntropyLoss_for_MixMatch()
-    smLossFunc  = VATLoss() #nn.MSELoss()
+    smLossFunc  = nn.MSELoss() #VATLoss()
     enLossFunc  = EntropyLoss()
 
     input_time_step   = input_t.size()[3]
@@ -102,9 +102,9 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         """
         
         # --- Run Model ---
-        onDecOut_mix = onDec(mix_data[:BATCH_SIZE]) ###
-        onDecOut6    = onDecOut_mix#[:BATCH_SIZE] # labeled
-        #onDecOut6_u  = onDecOut_mix[BATCH_SIZE:] # unlabeled
+        onDecOut_mix = onDec(mix_data) ###
+        onDecOut6    = onDecOut_mix[:BATCH_SIZE] # labeled
+        onDecOut6_u  = onDecOut_mix[BATCH_SIZE:] # unlabeled
         
         # === labeled ===
         onDecOut1   = nn_softmax(onDecOut6[:, :2])
@@ -115,11 +115,11 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
         
         # === unlabeled ===
-        #onDecOut1_u = nn_softmax(onDecOut6_u[:, :2])
-        #onDecOut2_u = nn_softmax(onDecOut6_u[:, 2:4])
-        #onDecOut3_u = nn_softmax(onDecOut6_u[:, 4:])
-        #temp_t2 = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
-        #onDecOut4_u = torch.cat((onDecOut1_u, temp_t2), dim=1)
+        onDecOut1_u = nn_softmax(onDecOut6_u[:, :2])
+        onDecOut2_u = nn_softmax(onDecOut6_u[:, 2:4])
+        onDecOut3_u = nn_softmax(onDecOut6_u[:, 4:])
+        temp_t2 = torch.max(onDecOut2_u[:, 1], onDecOut3_u[:, 1]).view(-1,1)
+        onDecOut4_u = torch.cat((onDecOut1_u, temp_t2), dim=1)
         
         # --- Loss ---
         """
@@ -159,12 +159,11 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         en_Loss += enLossFunc(onDecOut1.view(-1, 2))
         en_Loss += enLossFunc(onDecOut2.view(-1, 2))
         en_Loss += enLossFunc(onDecOut3.view(-1, 2))
-        """
         
         # === VAT Loss ===
         smsup_Loss += smLossFunc(onDec, mix_data[BATCH_SIZE:])
-        
         """
+        
         # === MixMatch Loss ===
         # Add L2 loss for unlabeled data (Hierachical)
         smsup_Loss += smLossFunc(onDecOut1_u.view(-1, 2), u_mix_label[:,  :2].contiguous().view(-1, 2))
@@ -173,7 +172,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         target_T2 = torch.max(u_mix_label[:, 3], u_mix_label[:, 5])
         smsup_Loss += smLossFunc(onDecOut4_u.view(-1, 3), torch.cat((u_mix_label[:, :2].contiguous().view(-1, 2), 
                                                                     target_T2.contiguous().view(-1, 1)), 1))
-        """   
+          
         print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (smsup_Loss.item() / input_time_step)) # 'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)
         onLoss = super_Loss + unlabel_lambda * smsup_Loss # + en_Loss
         onDecOpt.zero_grad()
@@ -194,7 +193,7 @@ def Mixmatch(labeled_data, labeled_label,
                              'pitchshift':{'shift_range':48}, 
                              'addnoise'  :False, #{'noise_type':'pink', 'noise_size':0.01}, 
                              }, # Cut-out, Frequency/Time Masking, Pitch shift 
-             sharpening_temp=0.5, augment_time=1, beta_dist_alpha=0.75):
+             sharpening_temp=0.5, augment_time=2, beta_dist_alpha=0.75):
     
     # labeled_data   shape: (10, 9, 174, 19)
     # labeled_label  shape: (10, 6)

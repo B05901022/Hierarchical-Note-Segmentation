@@ -17,7 +17,7 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
 from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop, PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
@@ -211,7 +211,7 @@ for epoch in range(EPOCH):
         loss = train_resnet_4loss_mixmatch(b_x1, b_y1, note_decoders, dec_optimizers, device,
                                            loss_funcs, INPUT_SIZE1, OUTPUT_SIZE, 
                                            BATCH_SIZE, k=WINDOW_SIZE,
-                                           unlabel_t=b_u1, unlabel_lambda=1.0)
+                                           unlabel_t=b_u1, unlabel_lambda=10.0)
         
         """
         if PRESENT_EPOCH > 9:
