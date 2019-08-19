@@ -22,7 +22,7 @@ from train_modules.VAT import VATLoss
 
 def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
-    unlabel_t, unlabel_lambda=10.0,
+    unlabel_t, unlabel_lambda=1.0,
     ):
     
     # input_t    shape: (1,3,522,data_length)
@@ -40,7 +40,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
     unlabel_aug_time  = 2
-    total_time_step   = input_time_step + input_time_step * unlabel_aug_time
+    total_time_step   = input_time_step #+ input_time_step * unlabel_aug_time
 
     window_size = 2*k+1
     
@@ -181,7 +181,7 @@ def train_resnet_4loss_mixmatch(input_t, target_Var, decoders, dec_opts, device,
         onDecOpt.step()
         totLoss += onLoss.item()
     
-    return totLoss / total_time_step #input_time_step
+    return totLoss / input_time_step #total_time_step
 
 def Mixmatch(labeled_data, labeled_label,
              unlabeled_data,
