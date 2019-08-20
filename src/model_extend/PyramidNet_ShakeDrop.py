@@ -10,7 +10,7 @@ import torch.nn as nn
 import math
 from model_extend.ShakeDrop import ShakeDrop
 
-device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+#device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class PyramidBlock(nn.Module):
     
@@ -46,7 +46,7 @@ class PyramidBlock(nn.Module):
         pad_zero = torch.autograd.Variable(torch.zeros(h0.size(0),
                                                        h.size(1)-h0.size(1),
                                                        h0.size(2),
-                                                       h0.size(3)).float().to(device))
+                                                       h0.size(3)).float().to(x.device))
         #print('pad_zero', pad_zero.shape)
         h0  = torch.cat([h0, pad_zero], dim=1)
         #print('h0', h0.shape)

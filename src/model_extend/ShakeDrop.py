@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import math
 
-device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+#device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 #######################################################################################
 # ShakeDrop Reference
@@ -21,10 +21,10 @@ class ShakeDropFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, training=True, p_drop=0.5, alpharange=[-1,1]):
         if training:
-            gate = torch.FloatTensor([0]).bernoulli_(1-p_drop).to(device)
+            gate = torch.FloatTensor([0]).bernoulli_(1-p_drop).to(x.device)
             ctx.save_for_backward(gate)
             if gate.item() == 0:
-                alpha = torch.FloatTensor(x.size(0)).uniform_(*alpharange).to(device)
+                alpha = torch.FloatTensor(x.size(0)).uniform_(*alpharange).to(x.device)
                 alpha = alpha.view(alpha.size(0),1,1,1).expand_as(x)
                 return alpha * x
             else:
@@ -36,7 +36,7 @@ class ShakeDropFunction(torch.autograd.Function):
     def backward(ctx, grad_output):
         gate = ctx.saved_tensors[0]
         if gate.item() == 0:
-            beta = torch.FloatTensor(grad_output.size(0)).uniform_(0,1).to(device)
+            beta = torch.FloatTensor(grad_output.size(0)).uniform_(0,1).to(x.device)
             beta = beta.view(beta.size(0),1,1,1).expand_as(grad_output)
             beta = torch.autograd.Variable(beta)
             return beta * grad_output, None, None, None
