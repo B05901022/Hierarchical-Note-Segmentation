@@ -99,15 +99,15 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
                                                                   target_T.contiguous().view(-1, 1)), 1))     
         
         # === Entropy Minimization ===
-        #en_Loss += enLossFunc(onDecOut1.view(-1, 2))
-        #en_Loss += enLossFunc(onDecOut2.view(-1, 2))
-        #en_Loss += enLossFunc(onDecOut3.view(-1, 2))
+        en_Loss += enLossFunc(onDecOut1.view(-1, 2))
+        en_Loss += enLossFunc(onDecOut2.view(-1, 2))
+        en_Loss += enLossFunc(onDecOut3.view(-1, 2))
         
         # === VAT Loss ===
-        smsup_Loss += smLossFunc(onDec, u_mix_data)
+        #smsup_Loss += smLossFunc(onDec, u_mix_data)
         
-        print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step)) #'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step) 
-        onLoss = super_Loss + unlabel_lambda * smsup_Loss # + en_Loss
+        print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)) #'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step)
+        onLoss = super_Loss + en_Loss #+ unlabel_lambda * smsup_Loss
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
