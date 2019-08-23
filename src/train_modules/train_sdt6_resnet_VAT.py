@@ -94,7 +94,7 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
         super_Loss += onLossFunc(onDecOut1.view(-1, 2), x_mix_label[:,  :2].contiguous().view(-1, 2))
         super_Loss += onLossFunc(onDecOut2.view(-1, 2), x_mix_label[:, 2:4].contiguous().view(-1, 2))
         super_Loss += onLossFunc(onDecOut3.view(-1, 2), x_mix_label[:, 4: ].contiguous().view(-1, 2))
-        target_T = torch.max(x_mix_label[:, 3], x_mix_label[:, 5])
+        target_T    = torch.max(x_mix_label[:, 3], x_mix_label[:, 5])
         super_Loss += onLossFunc(onDecOut4.view(-1, 3), torch.cat((x_mix_label[:, :2].contiguous().view(-1, 2), 
                                                                   target_T.contiguous().view(-1, 1)), 1))     
         
