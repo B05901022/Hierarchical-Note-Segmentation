@@ -104,7 +104,7 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
         #en_Loss += enLossFunc(onDecOut3.view(-1, 2))
         
         # === VAT Loss ===
-        smsup_Loss += smLossFunc(onDec, torch.cat((x_mix_data, u_mix_data),dim=0))
+        smsup_Loss += smLossFunc(onDec, u_mix_data) #torch.cat((x_mix_data, u_mix_data),dim=0)
         
         print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step)) #'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)
         onLoss = super_Loss + unlabel_lambda * smsup_Loss #en_Loss
