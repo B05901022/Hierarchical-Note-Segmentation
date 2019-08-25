@@ -53,8 +53,6 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     
     totLoss = 0
 
-    nn_softmax = nn.Softmax(dim=1)
-
     for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE): 
         
         # --- Loss ---
@@ -89,7 +87,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         # --- Run Model ---
         onDecOut_mix = onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) #onDec(x_mix_data) 
         onDecOut6    = onDecOut_mix[:BATCH_SIZE]
-        onDecOut6    = nn_softmax(onDecOut6.view(3,-1,2), dim=2).view(-1,6)
+        onDecOut6    = F.softmax(onDecOut6.view(3,-1,2), dim=2).view(-1,6)
         
         # === labeled ===
         onDecOut6    = ToOneHot(onDecOut6)
@@ -103,7 +101,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         en_Loss    += enLossFunc(onDecOut6)
         # --- unlabeled ---
         onDecOut6_u = onDecOut_mix[BATCH_SIZE:]
-        onDecOut6_u = nn_softmax(onDecOut6_u.view(3,-1,2), dim=2).view(-1,6)
+        onDecOut6_u = F.softmax(onDecOut6_u.view(3,-1,2), dim=2).view(-1,6)
         en_Loss    += enLossFunc(onDecOut6_u)
         
         # === VAT Loss ===
