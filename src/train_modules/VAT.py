@@ -114,7 +114,7 @@ class VATLoss_tree(nn.Module):
         :param eps: hyperparameter of VAT (default: 1.0)
         :param ip: iteration times of computing adv noise (default: 1)
         """
-        super(VATLoss_5class, self).__init__()
+        super(VATLoss_tree, self).__init__()
         self.xi = xi
         self.eps = eps
         self.ip = ip
