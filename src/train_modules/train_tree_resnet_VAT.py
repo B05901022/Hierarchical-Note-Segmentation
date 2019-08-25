@@ -174,7 +174,7 @@ class EntropyLoss(nn.Module):
         return -self.entmin_weight * torch.mean(x * torch.log(x)) 
 
 class LabelSmoothingLoss(nn.Module):
-    def __init__(self, smooth_eps=0.1, num_class):
+    def __init__(self, smooth_eps=0.1, num_class=5):
         super(LabelSmoothingLoss, self).__init__()
         self.smooth_eps = smooth_eps
         self.num_class  = num_class
