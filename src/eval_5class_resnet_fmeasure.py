@@ -1,22 +1,23 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Aug 25 13:04:23 2019
+
+@author: Austin Hsu
+"""
+
 import torch
 from torch import nn
 from onoffset_modules import *
 from torch.autograd import Variable
-import torchvision.datasets as dsets
-import torchvision.transforms as transforms
 import torchvision.models as models
 import torch.utils.data as data_utils
-import matplotlib.pyplot as plt
 import numpy as np
-import sys
 from argparse import ArgumentParser
 import mir_eval
-from sklearn.externals import joblib
-from sklearn.mixture import GaussianMixture
-from statistics import median
+import torch.nn.functional as F
 
-from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
-from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
+from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop_9
+from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop_MaxPool_9
 
 device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
@@ -358,18 +359,13 @@ parser.add_argument("-pf", help="pitch file position", dest="pfile", default="p.
 parser.add_argument("-of", help="output est file position", dest="offile", default="o.npy", type=str)
 parser.add_argument("-sf", help="output sdt file position", dest="sffile", default="o.npy", type=str)
 parser.add_argument("-sm", help="output smooth file position", dest="smfile", default="o.npy", type=str)
-parser.add_argument("-em1", help="encoder model file position", dest="emfile1", default="model/onset_v3_model", type=str)
 parser.add_argument("-dm1", help="decoder model file position", dest="dmfile1", default="model/onset_v3_model", type=str)
 parser.add_argument("-ef", help="eval file destination", dest="effile", default="eval/onset_v3_ef.csv", type=str)
 parser.add_argument("-tf", help="total eval file destination", dest="tffile", default="eval/onset_v3_tf.csv", type=str)
 parser.add_argument("-p", help="present file number", dest="present_file", default=0, type=int)
 parser.add_argument("-l", help="learning rate", dest="lr", default=0.001, type=float)
-parser.add_argument("--hs1", help="latent space size", dest="hidden_size1", default=50, type=int)
-parser.add_argument("--hl1", help="LSTM layer depth", dest="hidden_layer1", default=3, type=int)
 parser.add_argument("--ws", help="input window size", dest="window_size", default=3, type=int)
 parser.add_argument("--single-epoch", help="single turn training epoch", dest="single_epoch", default=5, type=int)
-parser.add_argument("--bidir1", help="LSTM bidirectional switch", dest="bidir1", default=0, type=bool)
-parser.add_argument("--norm", help="normalization layer type", choices=["bn","ln","nb","nl","nn","bb", "bl", "lb","ll"], dest="norm_layer", default="nn", type=str)
 parser.add_argument("--feat", help="feature cascaded", dest="feat_num", default=1, type=int)
 parser.add_argument("--threshold", help="post-processing threshold", dest="threshold", default=0.5, type=float)
 
@@ -386,18 +382,13 @@ p_file = args.pfile  # marked onset/offset/pitch matrix file
 of_file = args.offile  # marked onset/offset/pitch matrix file
 sf_file = args.sffile  # marked onset/offset/pitch matrix file
 sm_file = args.smfile  # marked onset/offset/pitch matrix file
-on_enc_model_file = args.emfile1 # e.g. model_file = "model/offset_v3_bi_k3"
 on_dec_model_file = args.dmfile1 #+'_train_10'
 INPUT_SIZE = 174*args.feat_num
 OUTPUT_SIZE = 6
-on_HIDDEN_SIZE = args.hidden_size1
-on_HIDDEN_LAYER = args.hidden_layer1
-on_BIDIR = args.bidir1
 LR = args.lr
 EPOCH = args.single_epoch
 BATCH_SIZE = 10
 WINDOW_SIZE = args.window_size
-on_NORM_LAYER = args.norm_layer
 THRESHOlD = args.threshold
 PATIENCE = 700
 
@@ -494,7 +485,7 @@ resnet18.avgpool = nn.AvgPool2d(kernel_size=(17,1), stride=1, padding=0)
 onDec = resnet18
 """
 #onDec = ResNet_ShakeDrop_9(depth=18, shakedrop=False)
-onDec = PyramidNet_ShakeDrop_MaxPool_9(depth=110, shakedrop=True, alpha=270)
+onDec = PyramidNet_ShakeDrop_MaxPool_9(depth=110, shakedrop=True, num_class=5, alpha=270)
 
 onDec.load_state_dict(torch.load(on_dec_model_file))
 
@@ -513,20 +504,20 @@ for step, xys in enumerate(input_loader):                 # gives batch data
     input_time_step = b_x.shape[3]
     k = WINDOW_SIZE
     window_size = 2*k+1
-    
-    nn_softmax = nn.Softmax(dim=1)
-    
+        
     for step in range((input_time_step//BATCH_SIZE)+1):
         if BATCH_SIZE*step > k and BATCH_SIZE*step < input_time_step - (k+1) - BATCH_SIZE:
 
             input_Var = Variable(torch.stack([ b_x[0, :, :, BATCH_SIZE*step+i-k:BATCH_SIZE*step+i-k+window_size]\
                            for i in range(BATCH_SIZE)], dim=0))
 
-            onDecOut6 = onDec(input_Var)
-            onDecOut1 = nn_softmax(onDecOut6[:, :2])
-            onDecOut2 = nn_softmax(onDecOut6[:, 2:4])
-            onDecOut3 = nn_softmax(onDecOut6[:, 4:])
-            
+            onDecOut5 = onDec(input_Var)
+            onDecOut5 = F.softmax(onDecOut5)
+            """
+            2019/08/25
+            Unfinished. Need to change Smooth_sdt6 function.
+            Cannot assume S = p(class[SO'X']) since we didn't force it.
+            """
             for i in range(BATCH_SIZE):
                 predict_on_note = [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]
                 predict_on_note += [ onDecOut2.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]

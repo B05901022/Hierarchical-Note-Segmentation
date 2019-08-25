@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Sun Aug 25 12:05:24 2019
+
+@author: Austin Hsu
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Mon Jul 15 15:58:01 2019
 
 @author: Austin Hsu
@@ -8,17 +15,10 @@ Created on Mon Jul 15 15:58:01 2019
 import torch
 from torch import nn
 from torch.autograd import Variable
-import torchvision.datasets as dsets
-import torchvision.transforms as transforms
-import torch.utils.data as data_utils
-import numpy as np
-import random
-import math
-import copy
 import torch.nn.functional as F
 
 from train_modules.audio_augment import transform_method
-from train_modules.VAT import VATLoss
+from train_modules.VAT import VATLoss_5class
 
 def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
@@ -26,25 +26,20 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
     ):
     
     # input_t    shape: (1,3,522,data_length)
-    # target_Var shape: (1,data_length,6)
+    # target_Var shape: 5class: (1,data_length)
+    #                   Tree:   (1,data_length,5)
     # unlabel_t  shape: (1,3,522,unlabel_data_length)
     
-    # encoder: Encoder
-    # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = loss_funcs[0] #CrossEntropyLoss_for_MixMatch()
-    smLossFunc  = VATLoss()
+    onLossFunc  = loss_funcs[0]
+    smLossFunc  = VATLoss_5class()
     enLossFunc  = EntropyLoss()
 
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
-
     window_size = 2*k+1
-    
     totLoss = 0
-
-    nn_softmax = nn.Softmax(dim=1)
 
     for step in range(k, input_time_step - k - BATCH_SIZE + 1, BATCH_SIZE): 
         
@@ -78,41 +73,20 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
         x_mix_label = Variable(x_mix_label) ###
         
         # --- Run Model ---
-        onDecOut_mix = onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) #onDec(x_mix_data) 
-        onDecOut6    = onDecOut_mix[:BATCH_SIZE]
-        
-        # === labeled ===
-        onDecOut1   = nn_softmax(onDecOut6[:, :2])
-        onDecOut2   = nn_softmax(onDecOut6[:, 2:4])
-        onDecOut3   = nn_softmax(onDecOut6[:, 4:])
-        
-        temp_t = torch.max(onDecOut2[:, 1], onDecOut3[:, 1]).view(-1,1)
-        onDecOut4 = torch.cat((onDecOut1, temp_t), dim=1)
-        
+        onDecOut5 = onDec(x_mix_data)
+                
         # --- Loss ---        
         # === Supervised Loss ===
-        super_Loss += onLossFunc(onDecOut1.view(-1, 2), x_mix_label[:,  :2].contiguous().view(-1, 2))
-        super_Loss += onLossFunc(onDecOut2.view(-1, 2), x_mix_label[:, 2:4].contiguous().view(-1, 2))
-        super_Loss += onLossFunc(onDecOut3.view(-1, 2), x_mix_label[:, 4: ].contiguous().view(-1, 2))
-        target_T    = torch.max(x_mix_label[:, 3], x_mix_label[:, 5])
-        super_Loss += onLossFunc(onDecOut4.view(-1, 3), torch.cat((x_mix_label[:, :2].contiguous().view(-1, 2), 
-                                                                  target_T.contiguous().view(-1, 1)), 1))     
-        
-        # === Entropy Minimization ===
-        # --- labeled ---
-        en_Loss += enLossFunc(onDecOut1.view(-1, 2))
-        en_Loss += enLossFunc(onDecOut2.view(-1, 2))
-        en_Loss += enLossFunc(onDecOut3.view(-1, 2))
-        # --- unlabeled ---
-        onDecOut1_u = nn_softmax(onDecOut_mix[BATCH_SIZE:, :2])
-        onDecOut2_u = nn_softmax(onDecOut_mix[BATCH_SIZE:, 2:4])
-        onDecOut3_u = nn_softmax(onDecOut_mix[BATCH_SIZE:, 4:])
-        en_Loss += enLossFunc(onDecOut1_u.view(-1, 2))
-        en_Loss += enLossFunc(onDecOut2_u.view(-1, 2))
-        en_Loss += enLossFunc(onDecOut3_u.view(-1, 2))
+        super_Loss += onLossFunc(onDecOut5, x_mix_label.contiguous())     
         
         # === VAT Loss ===
         smsup_Loss += smLossFunc(onDec, u_mix_data) #torch.cat((x_mix_data, u_mix_data),dim=0)
+        
+        # === Entropy Minimization ===
+        """
+        Remember to add unlabeled entropy minimization loss !!!!!
+        """
+        #en_Loss += enLossFunc(torch.cat((onDecOut5,onDecOut5_u),dim=0))
         
         print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step)) #'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)
         onLoss = super_Loss + unlabel_lambda * smsup_Loss #en_Loss
@@ -168,12 +142,38 @@ def DataPreprocess(labeled_data, labeled_label,
     return aug_x, aug_u, label_x
 
 def Normalize(data):
-    # Batchwise normalization (test)
+    # === Batchwise normalization ===
     return (data-torch.mean(data))/torch.std(data)
     
 class EntropyLoss(nn.Module):
     def __init__(self, entmin_weight=1.0):
         super(EntropyLoss, self).__init__()
         self.entmin_weight = entmin_weight
-    def forward(self, softmax_x):
-        return -self.entmin_weight * torch.mean(softmax_x * torch.log(softmax_x))  
+    def forward(self, x):
+        return -self.entmin_weight * torch.mean(torch.softmax(x, dim=1) * torch.log_softmax(x, dim=1))  
+
+class LabelSmoothingLoss(nn.Module):
+    def __init__(self, smooth_eps=0.1, num_class):
+        super(LabelSmoothingLoss, self).__init__()
+        self.smooth_eps = smooth_eps
+        self.num_class  = num_class
+    def forward(self, x, target):
+        # x : log_softmax output
+        # === One-hot ===
+        target = target.unsqueeze(dim=1)
+        target = torch.zeros(target.size(0), self.num_class).scatter_(1, target, 1)
+        # ===============
+        smooth_target = (1.-self.smooth_eps) * target + self.smooth_eps * torch.Tensor(target.size()).fill_(1./self.num_class)
+        return F.nll_loss(x, smooth_target)
+        
+class TreeLoss(nn.Module):
+    def __init__(self, smooth):
+        super(TreeLoss, self).__init__()
+        if smooth:
+            self.criterion = LabelSmoothingLoss()
+        else:
+            self.criterion = nn.CrossEntropyLoss()
+    def forward(self, x, target):
+        x = torch.cat([torch.sigmoid(x[:,:1]),
+                       (1.-torch.sigmoid(x[:,:1])) * torch.softmax(x[:,1:], dim=1)], dim=1)
+        return self.criterion(x, target)
