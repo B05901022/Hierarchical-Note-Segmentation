@@ -85,8 +85,8 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         x_mix_label = Variable(x_mix_label)
         
         # --- Run Model ---
-        onDecOut_mix = onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) #onDec(x_mix_data) 
-        onDecOut6    = onDecOut_mix[:BATCH_SIZE]
+        onDecOut_mix = onDec(x_mix_data)  #onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) 
+        onDecOut6    = onDecOut_mix
         onDecOut6    = F.softmax(onDecOut6.view(3,-1,2), dim=2).view(-1,6)
         
         # === labeled ===
@@ -98,17 +98,17 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         
         # === Entropy Minimization ===
         # --- labeled ---
-        en_Loss    += enLossFunc(onDecOut6)
+        #en_Loss    += enLossFunc(onDecOut6)
         # --- unlabeled ---
-        onDecOut6_u = onDecOut_mix[BATCH_SIZE:]
-        onDecOut6_u = F.softmax(onDecOut6_u.view(3,-1,2), dim=2).view(-1,6)
-        en_Loss    += enLossFunc(onDecOut6_u)
+        #onDecOut6_u = onDecOut_mix[BATCH_SIZE:]
+        #onDecOut6_u = F.softmax(onDecOut6_u.view(3,-1,2), dim=2).view(-1,6)
+        #en_Loss    += enLossFunc(onDecOut6_u)
         
         # === VAT Loss ===
         smsup_Loss += smLossFunc(onDec, u_mix_data)
         
         print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step)) #'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)
-        onLoss = super_Loss + unlabel_lambda * smsup_Loss + en_Loss
+        onLoss = super_Loss + unlabel_lambda * smsup_Loss #+ en_Loss
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
