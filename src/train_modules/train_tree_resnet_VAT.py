@@ -143,7 +143,7 @@ def DataPreprocess(labeled_data, labeled_label,
     
     # --- Labeled Augmentation ---
     aug_x   = transform(labeled_data)
-    label_x = labeled_label[0]
+    label_x = labeled_label
     
     # --- Unlabeled Augmentation ---
     aug_u = transform(unlabeled_data)
