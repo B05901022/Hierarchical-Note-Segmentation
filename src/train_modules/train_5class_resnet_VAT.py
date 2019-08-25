@@ -165,15 +165,3 @@ class LabelSmoothingLoss(nn.Module):
         # ===============
         smooth_target = (1.-self.smooth_eps) * target + self.smooth_eps * torch.Tensor(target.size()).fill_(1./self.num_class)
         return F.nll_loss(x, smooth_target)
-        
-class TreeLoss(nn.Module):
-    def __init__(self, smooth):
-        super(TreeLoss, self).__init__()
-        if smooth:
-            self.criterion = LabelSmoothingLoss()
-        else:
-            self.criterion = nn.CrossEntropyLoss()
-    def forward(self, x, target):
-        x = torch.cat([torch.sigmoid(x[:,:1]),
-                       (1.-torch.sigmoid(x[:,:1])) * torch.softmax(x[:,1:], dim=1)], dim=1)
-        return self.criterion(x, target)
