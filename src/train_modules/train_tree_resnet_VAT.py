@@ -27,7 +27,7 @@ import torch.nn.functional as F
 from train_modules.audio_augment import transform_method
 from train_modules.VAT import VATLoss_tree
 
-def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
+def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     loss_funcs, INPUT_SIZE, OUTPUT_SIZE, BATCH_SIZE, k,
     unlabel_t, unlabel_lambda,
     ):
