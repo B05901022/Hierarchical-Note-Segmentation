@@ -388,7 +388,6 @@ of_file = args.offile  # marked onset/offset/pitch matrix file
 sf_file = args.sffile  # marked onset/offset/pitch matrix file
 sm_file = args.smfile  # marked onset/offset/pitch matrix file
 on_enc_model_file = args.emfile1 # e.g. model_file = "model/offset_v3_bi_k3"
-print(args.ten)
 on_dec_model_file = args.dmfile1 +'_train_10' if args.ten==1 else args.dmfile1
 INPUT_SIZE = 174*args.feat_num
 OUTPUT_SIZE = 6
