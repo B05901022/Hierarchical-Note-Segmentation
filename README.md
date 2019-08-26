@@ -27,13 +27,17 @@ For training, you can change hyper-parameters in the scripts **train_sdt6_resnet
 ```
 bash script/train_sdt6_resnet_top.sh
 ```
-- For training resnet-18 with semi-supervised learning (Not Done)
+- For training with Data Augmentation and semi-supervised learning
 ```
 bash script/train_sdt6_resnet_semi_top.sh
 ```
-- For training resnet-18 with Data Augmentation (Not Done)
+- For training with Data Augmentation
 ```
 bash script/train_sdt6_resnet_aug_top.sh
+```
+- For training with Data Augmentation and 5-class
+```
+bash script/train_5class_resnet_semi_top.sh
 ```
 - For training rnn-attn-19
 ```
@@ -45,6 +49,14 @@ For evaluation, you can change hyper-parameters in the scripts **eval_resnet_fme
 - For evaluating on resnet-18, with or without SSL
 ```
 bash script/eval_resnet_fmeasure.sh
+```
+- For evaluating on resnet-18, with or without SSL and on 10 epochs
+```
+bash script/eval_resnet_fmeasure.sh 1
+```
+- For evaluating on resnet-18, with or without SSL and on 5-class
+```
+bash script/eval_5class_resnet_fmeasure.sh 1
 ```
 - For evaluating on rnn-attn-19
 ```

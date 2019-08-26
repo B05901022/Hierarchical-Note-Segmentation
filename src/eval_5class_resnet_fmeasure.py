@@ -349,6 +349,19 @@ def freq2pitch(freq_np):
     pitch_np = 69+12*np.log2(freq_np/440)
     return pitch_np
 
+def class2Sdt6(predict_x):
+    predict_x  = predict_x.argmax(dim=1)
+    sdt_result = torch.zeros(size=(predict_x.size(0),6))
+    sdt_dict   = {0:[0],
+                  1:[1,2,4],
+                  2:[1,2,5],
+                  3:[1,3,4],
+                  4:[1,3,5]}
+    for i in range(predict_x.size(0)):
+        curr_class = predict_x[i].item()
+        sdt_result[i,sdt_dict[curr_class]]=1.
+    return sdt_result
+
 #----------------------------
 # Parser
 #----------------------------
@@ -513,11 +526,10 @@ for step, xys in enumerate(input_loader):                 # gives batch data
 
             onDecOut5 = onDec(input_Var)
             onDecOut5 = F.softmax(onDecOut5)
-            """
-            2019/08/25
-            Unfinished. Need to change Smooth_sdt6 function.
-            Cannot assume S = p(class[SO'X']) since we didn't force it.
-            """
+            onDecOut6 = class2Sdt6(onDecOut5)
+            onDecOut1 = onDecOut6[:,  :2]
+            onDecOut2 = onDecOut6[:, 2:4]
+            onDecOut3 = onDecOut6[:, 4: ]
             for i in range(BATCH_SIZE):
                 predict_on_note = [ onDecOut1.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]
                 predict_on_note += [ onDecOut2.view(BATCH_SIZE, 1, 2).data[i][0][j].cpu().numpy() for j in range(2) ]
