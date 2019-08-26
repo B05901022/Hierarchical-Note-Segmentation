@@ -18,7 +18,7 @@ from statistics import median
 from model_extend.ResNet_ShakeDrop import ResNet_ShakeDrop, ResNet_ShakeDrop_9
 from model_extend.PyramidNet_ShakeDrop import PyramidNet_ShakeDrop_MaxPool, PyramidNet_ShakeDrop_MaxPool_9
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
 #----------------------------
 # Smoothing Process
@@ -387,7 +387,7 @@ of_file = args.offile  # marked onset/offset/pitch matrix file
 sf_file = args.sffile  # marked onset/offset/pitch matrix file
 sm_file = args.smfile  # marked onset/offset/pitch matrix file
 on_enc_model_file = args.emfile1 # e.g. model_file = "model/offset_v3_bi_k3"
-on_dec_model_file = args.dmfile1 #+'_train_10'
+on_dec_model_file = args.dmfile1 +'_train_10'
 INPUT_SIZE = 174*args.feat_num
 OUTPUT_SIZE = 6
 on_HIDDEN_SIZE = args.hidden_size1
