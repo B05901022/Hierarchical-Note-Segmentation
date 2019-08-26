@@ -154,9 +154,9 @@ def DataPreprocess(labeled_data, labeled_label,
     label_x  = label_x[shuffle]
     
     # --- CUDA ---
-    aug_x  = aug_x.to(device)
-    aug_u  = aug_u.to(device)
-    labeled_label = labeled_label.to(device, non_blocking=True)
+    aug_x   = aug_x.to(device)
+    aug_u   = aug_u.to(device)
+    label_x = label_x.to(device, non_blocking=True)
     
     return aug_x, aug_u, label_x
 
