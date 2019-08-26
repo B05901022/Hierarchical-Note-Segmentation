@@ -185,12 +185,12 @@ def ToLabel(input_onehot):
 class LabelSmoothingLoss(nn.Module):
     def __init__(self, smooth_eps=0.1, num_class=5):
         super(LabelSmoothingLoss, self).__init__()        
-    def forward(self, x, target):
+    def forward(self, x, smooth_target):
         """
         x     : probability of outputs
         target: smooth label 
         """
-        return F.nll_loss(torch.log(x), target)
+        return -torch.mean((smooth_target*torch.log(x)).sum(dim=1))
 
 def SmoothTarget(target, smooth_eps=0.1):
     """
