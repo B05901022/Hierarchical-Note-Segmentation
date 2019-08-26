@@ -26,16 +26,17 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
     ):
     
     # input_t    shape: (1,3,522,data_length)
-    # target_Var shape: 5class: (1,data_length)
-    #                   Tree:   (1,data_length,5)
+    # target_Var shape: 5class: (1,data_length,6)
     # unlabel_t  shape: (1,3,522,unlabel_data_length)
     
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = loss_funcs[0]
+    onLossFunc  = nn.CrossEntropyLoss() #LabelSmoothingLoss()
     smLossFunc  = VATLoss_5class()
     enLossFunc  = EntropyLoss()
-
+    
+    target_Var = ToLabel(ToOneHot(target_Var[0])) #SmoothTarget(ToOneHot(target_Var[0]))
+    
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
     window_size = 2*k+1
@@ -59,7 +60,7 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
         
         # ---Data Preprocessing ---
         x_mix_data, u_mix_data, x_mix_label = DataPreprocess(labeled_data=x_unmix_data,
-                                                             labeled_label=target_Var[:, step:step+BATCH_SIZE],
+                                                             labeled_label=target_Var[step:step+BATCH_SIZE],
                                                              unlabeled_data=u_unmix_data,
                                                              device=device
                                                              )
@@ -77,16 +78,13 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
                 
         # --- Loss ---        
         # === Supervised Loss ===
-        super_Loss += onLossFunc(onDecOut5, x_mix_label.contiguous())     
+        super_Loss += onLossFunc(onDecOut5, x_mix_label)#.contiguous())     
         
         # === VAT Loss ===
         smsup_Loss += smLossFunc(onDec, u_mix_data) #torch.cat((x_mix_data, u_mix_data),dim=0)
         
         # === Entropy Minimization ===
-        """
-        Remember to add unlabeled entropy minimization loss !!!!!
-        """
-        #en_Loss += enLossFunc(torch.cat((onDecOut5,onDecOut5_u),dim=0))
+        #en_Loss += enLossFunc(torch.cat((onDecOut5,onDecOut5_u),dim=0)) # need to add unlabeled entropy loss
         
         print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step)) #'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)
         onLoss = super_Loss + unlabel_lambda * smsup_Loss #en_Loss
@@ -122,7 +120,7 @@ def DataPreprocess(labeled_data, labeled_label,
     
     # --- Labeled Augmentation ---
     aug_x   = transform(labeled_data)
-    label_x = labeled_label[0]
+    label_x = labeled_label
     
     # --- Unlabeled Augmentation ---
     aug_u = transform(unlabeled_data)
@@ -137,7 +135,7 @@ def DataPreprocess(labeled_data, labeled_label,
     # --- CUDA ---
     aug_x  = aug_x.to(device)
     aug_u  = aug_u.to(device)
-    labeled_label = labeled_label.to(device, non_blocking=True)
+    label_x = label_x.to(device, non_blocking=True)
     
     return aug_x, aug_u, label_x
 
@@ -153,15 +151,25 @@ class EntropyLoss(nn.Module):
         return -self.entmin_weight * torch.mean(torch.softmax(x, dim=1) * torch.log_softmax(x, dim=1))  
 
 class LabelSmoothingLoss(nn.Module):
-    def __init__(self, smooth_eps=0.1, num_class):
+    def __init__(self):
         super(LabelSmoothingLoss, self).__init__()
-        self.smooth_eps = smooth_eps
-        self.num_class  = num_class
-    def forward(self, x, target):
-        # x : log_softmax output
-        # === One-hot ===
-        target = target.unsqueeze(dim=1)
-        target = torch.zeros(target.size(0), self.num_class).scatter_(1, target, 1)
-        # ===============
-        smooth_target = (1.-self.smooth_eps) * target + self.smooth_eps * torch.Tensor(target.size()).fill_(1./self.num_class)
-        return F.nll_loss(x, smooth_target)
+    def forward(self, x, smooth_target):
+        return -torch.mean((smooth_target*torch.log_softmax(x)).sum(dim=1))
+
+def ToOneHot(input_label):
+    p_SOnXn = input_label[:,0].unsqueeze(1)
+    p_DOnXn = (input_label[:,1]*input_label[:,2]*input_label[:,4]).unsqueeze(1)
+    p_DOnX  = (input_label[:,1]*input_label[:,2]*input_label[:,5]).unsqueeze(1)
+    p_DOXn  = (input_label[:,1]*input_label[:,3]*input_label[:,4]).unsqueeze(1)
+    p_DOX   = (input_label[:,1]*input_label[:,3]*input_label[:,5]).unsqueeze(1)
+    return torch.cat([p_SOnXn, p_DOnXn, p_DOnX, p_DOXn, p_DOX], dim=1)
+
+def ToLabel(input_onehot):
+    return input_onehot.argmax(dim=1)
+
+def SmoothTarget(target, smooth_eps=0.1):
+    """
+    Conver one-hot target to smooth version
+    """
+    target = (1.-smooth_eps) * target + smooth_eps * torch.Tensor(target.size()).fill_(0.2)
+    return target
