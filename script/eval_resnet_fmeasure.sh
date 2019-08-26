@@ -23,6 +23,8 @@ FEAT_NUM=9
 
 THRESHOLD=0.5
 
+TENTEST=$1
+
 MDIR="model/sdt6_resnet_${NORM}${WS}_l${HL1}h${HS1}b${BIDIR1}_e${END_EPOCH}b${BATCH}_${FEAT}_sample"
 EMFILE1="${MDIR}/onoffset_attn_${NORM}_onenc_k${WS}l${HL1}h${HS1}b${BIDIR1}e${END_EPOCH}b${BATCH}_${FEAT}"
 DMFILE1="${MDIR}/onoffset_attn_${NORM}_ondec_k${WS}l${HL1}h${HS1}b${BIDIR1}e${END_EPOCH}b${BATCH}_${FEAT}"
@@ -49,8 +51,11 @@ mkdir -p output/train_total
 echo -e "Start Evaluation on ISMIR2014 Validation Set"
 for num in $(seq 1 38)
 do
-    python3 src/eval_resnet_fmeasure.py -d ${DHEAD}/${FEAT}/${num}_${FEAT} -a ${AHEAD}${num}.GroundTruth -pf ${PHEAD}${num}_P -em1 ${EMFILE1} -dm1 ${DMFILE1} -p ${num} -ef ${EFILE} -tf ${VFILE} -l ${LR} \
-    --hs1 ${HS1} --hl1 ${HL1} --ws ${WS} --single-epoch ${SE} --bidir1 ${BIDIR1} --norm ${NORM} --feat ${FEAT_NUM} --threshold ${THRESHOLD} -of ${TROUTDIR}/${num}_test -sf ${TROUTDIR}/${num}_sdt_test -sm ${TROUTDIR}/${num}_sm_test
+    python3 src/eval_resnet_fmeasure.py -d ${DHEAD}/${FEAT}/${num}_${FEAT} -a ${AHEAD}${num}.GroundTruth \
+    -pf ${PHEAD}${num}_P -em1 ${EMFILE1} -dm1 ${DMFILE1} -p ${num} -ef ${EFILE} -tf ${VFILE} -l ${LR} \
+    --hs1 ${HS1} --hl1 ${HL1} --ws ${WS} --single-epoch ${SE} --bidir1 ${BIDIR1} --norm ${NORM} \
+    --feat ${FEAT_NUM} --threshold ${THRESHOLD} -of ${TROUTDIR}/${num}_test \
+    -sf ${TROUTDIR}/${num}_sdt_test -sm ${TROUTDIR}/${num}_sm_test -ten ${TENTEST}
 done
 
 #echo -e "Start Evaluation on TONAS Training Set"
