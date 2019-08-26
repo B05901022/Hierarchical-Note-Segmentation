@@ -44,7 +44,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     smLossFunc  = VATLoss_tree() # can try ip=1
     enLossFunc  = EntropyLoss()
     
-    target_Var  = ToLabel(ToOneHot(target_Var[0])) # to index label
+    target_Var  = SmoothTarget(ToOneHot(target_Var[0]))#ToLabel(ToOneHot(target_Var[0])) # to index label
 
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
@@ -171,20 +171,6 @@ class EntropyLoss(nn.Module):
     def forward(self, x):
         return -self.entmin_weight * torch.mean(x * torch.log(x)) 
 
-class LabelSmoothingLoss(nn.Module):
-    def __init__(self, smooth_eps=0.1, num_class=5):
-        super(LabelSmoothingLoss, self).__init__()
-        self.smooth_eps = smooth_eps
-        self.num_class  = num_class
-    def forward(self, x, target):
-        # x : log_softmax output
-        # === One-hot ===
-        target = target.unsqueeze(dim=1)
-        target = torch.zeros(target.size(0), self.num_class).scatter_(1, target, 1)
-        # ===============
-        smooth_target = (1.-self.smooth_eps) * target + self.smooth_eps * torch.Tensor(target.size()).fill_(1./self.num_class)
-        return F.nll_loss(x, smooth_target)
-
 def ToOneHot(input_label):
     p_SOnXn = input_label[:,0].unsqueeze(1)
     p_DOnXn = (input_label[:,1]*input_label[:,2]*input_label[:,4]).unsqueeze(1)
@@ -195,3 +181,20 @@ def ToOneHot(input_label):
 
 def ToLabel(input_onehot):
     return input_onehot.argmax(dim=1)
+
+class LabelSmoothingLoss(nn.Module):
+    def __init__(self, smooth_eps=0.1, num_class=5):
+        super(LabelSmoothingLoss, self).__init__()        
+    def forward(self, x, target):
+        """
+        x     : probability of outputs
+        target: smooth label 
+        """
+        return F.nll_loss(torch.log(x), target)
+
+def SmoothTarget(target, smooth_eps=0.1):
+    """
+    Conver one-hot target to smooth version
+    """
+    target = (1.-smooth_eps) * target + smooth_eps * torch.Tensor(target.size()).fill_(0.2)
+    return target
