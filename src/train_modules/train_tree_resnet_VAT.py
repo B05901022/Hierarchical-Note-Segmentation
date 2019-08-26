@@ -41,7 +41,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
     onLossFunc  = nn.CrossEntropyLoss() #LabelSmoothingLoss()
-    smLossFunc  = VATLoss_tree() # can try ip=1
+    smLossFunc  = VATLoss_tree(ip=1) # can try ip=1
     enLossFunc  = EntropyLoss()
     
     target_Var  = ToLabel(ToOneHot(target_Var[0])) #SmoothTarget(ToOneHot(target_Var[0])) # to index label
