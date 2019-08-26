@@ -372,7 +372,7 @@ parser.add_argument("--bidir1", help="LSTM bidirectional switch", dest="bidir1",
 parser.add_argument("--norm", help="normalization layer type", choices=["bn","ln","nb","nl","nn","bb", "bl", "lb","ll"], dest="norm_layer", default="nn", type=str)
 parser.add_argument("--feat", help="feature cascaded", dest="feat_num", default=1, type=int)
 parser.add_argument("--threshold", help="post-processing threshold", dest="threshold", default=0.5, type=float)
-parser.add_argument("-ten", help="10 epoch evaluation", dest="ten", default=False, type=bool)
+parser.add_argument("-ten", help="10 epoch evaluation", dest="ten", default=0, type=int)
 
 args = parser.parse_args()
 
@@ -389,7 +389,7 @@ sf_file = args.sffile  # marked onset/offset/pitch matrix file
 sm_file = args.smfile  # marked onset/offset/pitch matrix file
 on_enc_model_file = args.emfile1 # e.g. model_file = "model/offset_v3_bi_k3"
 print(args.ten)
-on_dec_model_file = args.dmfile1 +'_train_10' if args.ten else args.dmfile1
+on_dec_model_file = args.dmfile1 +'_train_10' if args.ten==1 else args.dmfile1
 INPUT_SIZE = 174*args.feat_num
 OUTPUT_SIZE = 6
 on_HIDDEN_SIZE = args.hidden_size1
