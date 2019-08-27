@@ -4,7 +4,7 @@ SIZE_LR=1
 HS1=150
 HL1=3
 WS=9
-SE=1 #5
+SE=2 #5
 BIDIR1=1
 NORM=ln
 
