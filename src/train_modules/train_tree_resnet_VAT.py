@@ -40,11 +40,11 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = LabelSmoothingLoss() #nn.CrossEntropyLoss()
+    onLossFunc  = nn.CrossEntropyLoss() #LabelSmoothingLoss()
     smLossFunc  = VATLoss_tree(ip=1) # can try ip=1
     enLossFunc  = EntropyLoss()
     
-    target_Var  = SmoothTarget(ToOneHot(target_Var[0])) #ToLabel(ToOneHot(target_Var[0])) # to index label
+    target_Var  = ToLabel(ToOneHot(target_Var[0])) #SmoothTarget(ToOneHot(target_Var[0])) # to index label
 
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
@@ -169,7 +169,7 @@ class EntropyLoss(nn.Module):
         super(EntropyLoss, self).__init__()
         self.entmin_weight = entmin_weight
     def forward(self, x):
-        return -self.entmin_weight * torch.mean(x * torch.log(x)) 
+        return -self.entmin_weight * torch.mean(x * torch.log(torch.clamp(x,1e-8))) 
 
 def ToOneHot(input_label):
     p_SOnXn = input_label[:,0].unsqueeze(1)
@@ -190,7 +190,7 @@ class LabelSmoothingLoss(nn.Module):
         x     : probability of outputs
         target: smooth label 
         """
-        return -torch.mean((smooth_target*torch.log(x)).sum(dim=1))
+        return -torch.mean((smooth_target*torch.log(torch.clamp(x,1e-8))).sum(dim=1))
 
 def SmoothTarget(target, smooth_eps=0.1):
     """

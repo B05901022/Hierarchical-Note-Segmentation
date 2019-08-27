@@ -135,7 +135,7 @@ class VATLoss_tree(nn.Module):
                 pred_hat = model(x + self.xi * d)
                 pred_hat = F.softmax(pred_hat.view(3,-1,2), dim=2).view(-1,6)
                 pred_hat = ToOneHot(pred_hat)
-                logp_hat = torch.log(pred_hat)
+                logp_hat = torch.log(torch.clamp(pred_hat,1e-8))
                 adv_distance = F.kl_div(logp_hat, pred, reduction='batchmean')
                 adv_distance.backward()
                 d = _l2_normalize(d.grad)
