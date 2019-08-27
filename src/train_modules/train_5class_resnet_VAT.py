@@ -153,7 +153,7 @@ class LabelSmoothingLoss(nn.Module):
     def __init__(self):
         super(LabelSmoothingLoss, self).__init__()
     def forward(self, x, smooth_target):
-        return -torch.mean((smooth_target*torch.log_softmax(x)).sum(dim=1))
+        return -torch.mean((smooth_target*torch.log_softmax(x,dim=1)).sum(dim=1))
 
 def ToOneHot(input_label):
     p_SOnXn = input_label[:,0].unsqueeze(1)
