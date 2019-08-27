@@ -1,4 +1,5 @@
 #!/bin/bash
+
 DHEAD="data/TONAS_note/${9}/"
 AHEAD1="ans/TONAS_SDT6/sdt6_"
 UHEAD="data/Feat/" #"data/TONAS_note/${9}/"
