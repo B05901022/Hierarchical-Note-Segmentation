@@ -1,12 +1,8 @@
 #!/bin/bash
 
 SIZE_LR=1
-HS1=150 #
-HL1=3 #
 WS=9
-SE=2 
-BIDIR1=1 #
-NORM=ln #
+SE=1 
 
 BATCH=64 
 FEAT1=SN_SF1_SIN_SF1_ZN_F9

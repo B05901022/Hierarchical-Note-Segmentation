@@ -10,7 +10,7 @@ SIZE_LR=1
 BASE_LR=0.001
 LR=$(echo "${BASE_LR} * ${SIZE_LR}" | bc)
 WS=9
-SE=2 #
+SE=1 #
 
 END_EPOCH=20 
 BATCH=64 
