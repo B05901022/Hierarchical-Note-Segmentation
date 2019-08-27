@@ -40,11 +40,13 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = nn.CrossEntropyLoss() #LabelSmoothingLoss()
+    onLossFunc  = LabelSmoothingLoss() #nn.CrossEntropyLoss()
     smLossFunc  = VATLoss_tree(ip=1) # can try ip=1
     enLossFunc  = EntropyLoss()
+    sdtLossFunc = loss_funcs[0]
     
-    target_Var  = ToLabel(ToOneHot(target_Var[0])) #SmoothTarget(ToOneHot(target_Var[0])) # to index label
+    target_Sdt  = SmoothTarget(target_Var[0], num_class=6) #target_Var[0]
+    target_Var  = SmoothTarget(ToOneHot(target_Var[0])) #ToLabel(ToOneHot(target_Var[0])) # to index label
 
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
@@ -75,7 +77,8 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
                                                              unlabeled_data=u_unmix_data,
                                                              device=device
                                                              )
-        
+        curr_Sdt = target_Sdt[step:step+BATCH_SIZE]
+        curr_Sdt = curr_Sdt.to(device, non_blocking=True)
         # --- Pseudo Label ---
         # mix_label = torch.cat((x_mix_label, u_mix_label), dim=0)
         
@@ -89,12 +92,10 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         onDecOut6    = onDecOut_mix
         onDecOut6    = F.softmax(onDecOut6.view(3,-1,2), dim=2).view(-1,6)
         
-        # === labeled ===
-        onDecOut6    = ToOneHot(onDecOut6)
-        
         # --- Loss ---        
         # === Supervised Loss ===
-        super_Loss += onLossFunc(onDecOut6, x_mix_label)#.contiguous())   
+        super_Loss += onLossFunc(ToOneHot(onDecOut6), x_mix_label)#.contiguous())
+        super_Loss += sdtLossFunc(onDecOut6, curr_Sdt)
         
         # === Entropy Minimization ===
         # --- labeled ---
@@ -192,9 +193,9 @@ class LabelSmoothingLoss(nn.Module):
         """
         return -torch.mean((smooth_target*torch.log(torch.clamp(x,1e-8))).sum(dim=1))
 
-def SmoothTarget(target, smooth_eps=0.1):
+def SmoothTarget(target, smooth_eps=0.1, num_class=5):
     """
     Conver one-hot target to smooth version
     """
-    target = (1.-smooth_eps) * target + smooth_eps * torch.Tensor(target.size()).fill_(0.2)
+    target = (1.-smooth_eps) * target + smooth_eps * torch.Tensor(target.size()).fill_(1./num_class)
     return target
