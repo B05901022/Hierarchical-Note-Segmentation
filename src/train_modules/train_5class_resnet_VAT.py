@@ -34,7 +34,7 @@ def train_resnet_4loss_VAT(input_t, target_Var, decoders, dec_opts, device,
     onLossFunc  = nn.CrossEntropyLoss() #LabelSmoothingLoss()
     smLossFunc  = VATLoss_5class(ip=1)
     enLossFunc  = EntropyLoss()
-    
+    print(target_Var.shape)
     target_Var = ToLabel(ToOneHot(target_Var[0])) #SmoothTarget(ToOneHot(target_Var[0]))
     
     input_time_step   = input_t.size()[3]
