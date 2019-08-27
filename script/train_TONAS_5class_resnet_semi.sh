@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DHEAD="data/TONAS_note/${9}/"
+DHEAD="data/TONAS_note/$5/"
 AHEAD1="ans/TONAS_SDT6/sdt6_"
 UHEAD="data/Feat/" #"data/TONAS_note/${9}/"
 BASE_LR=0.001
