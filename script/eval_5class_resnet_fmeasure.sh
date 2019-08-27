@@ -19,8 +19,8 @@ FEAT_NUM=9
 
 THRESHOLD=0.5
 
-MDIR="model/5class_resnet_${WS}_e${END_EPOCH}b${BATCH}_${FEAT1}_sample"
-DMFILE1="${MDIR}/onoffset_ondec_k${WS}e${END_EPOCH}b${BATCH}_${FEAT1}"
+MDIR="model/5class_resnet_${WS}_e${END_EPOCH}b${BATCH}_${FEAT}_sample"
+DMFILE1="${MDIR}/onoffset_ondec_k${WS}e${END_EPOCH}b${BATCH}_${FEAT}"
 EFILE="output/single/ISMIR2014_5class_resnet_k${WS}_e${END_EPOCH}b${BATCH}_${FEAT}.csv"
 VFILE="output/total/ISMIR2014_5class_resnet_k${WS}_e${END_EPOCH}b${BATCH}_${FEAT}.csv"
 TEFILE="output/train_single/ISMIR2014_5class_resnet_k${WS}_e${END_EPOCH}b${BATCH}_${FEAT}_sample.csv"
