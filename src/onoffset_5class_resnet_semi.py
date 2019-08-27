@@ -60,7 +60,7 @@ on_dec_model_file = args.dm1file # e.g. model_file = "model/onset_v3_bi_k3"
 on_dec_model_train_file = args.dmt1file # e.g. model_file = "model/onset_v3_bi_k3"
 loss_file = args.lfile
 INPUT_SIZE1 = 174*args.feat_num1
-OUTPUT_SIZE = 5 # maybe 6
+OUTPUT_SIZE = 6
 LR = args.lr
 EPOCH = args.single_epoch
 DATA_BATCH_SIZE = 1
@@ -180,7 +180,7 @@ for epoch in range(EPOCH):
     loss_count = 0
     for step, xys in enumerate(train_loader):                 # gives batch data
         b_x1 = xys[0].contiguous() # reshape x to (batch, C, feat_size, time_frame)
-        b_y1 = Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1)) #Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1, OUTPUT_SIZE)).to(device)
+        b_y1 = Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1, OUTPUT_SIZE)) #Variable(xys[1].contiguous().view(DATA_BATCH_SIZE, -1, OUTPUT_SIZE)).to(device)
         b_u1 = xys[2].contiguous()
         
         # b_x1 shape: (1,9,174,songlength)
