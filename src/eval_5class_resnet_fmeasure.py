@@ -525,7 +525,7 @@ for step, xys in enumerate(input_loader):                 # gives batch data
                            for i in range(BATCH_SIZE)], dim=0))
 
             onDecOut5 = onDec(input_Var)
-            onDecOut5 = F.softmax(onDecOut5)
+            onDecOut5 = F.softmax(onDecOut5,dim=1)
             onDecOut6 = class2Sdt6(onDecOut5)
             onDecOut1 = onDecOut6[:,  :2]
             onDecOut2 = onDecOut6[:, 2:4]
