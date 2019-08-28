@@ -45,7 +45,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     enLossFunc  = EntropyLoss()
     sdtLossFunc = loss_funcs[0]
     
-    target_Sdt  = SmoothTarget(target_Var[0], num_class=6) #target_Var[0]
+    target_Sdt  = SmoothTarget(target_Var[0], num_class=2) #target_Var[0]
     target_Var  = SmoothTarget(ToOneHot(target_Var[0])) #ToLabel(ToOneHot(target_Var[0])) # to index label
 
     input_time_step   = input_t.size()[3]
