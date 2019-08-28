@@ -40,7 +40,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = nn.CrossEntropyLoss()#LabelSmoothingLoss() 
+    onLossFunc  = nn.NLLLoss() #nn.CrossEntropyLoss()#LabelSmoothingLoss() 
     smLossFunc  = VATLoss_tree(ip=1) # can try ip=1
     enLossFunc  = EntropyLoss()
     sdtLossFunc = loss_funcs[0]
@@ -94,7 +94,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         
         # --- Loss ---        
         # === Supervised Loss ===
-        super_Loss += onLossFunc(ToOneHot(onDecOut6), x_mix_label)#.contiguous())
+        super_Loss += onLossFunc(torch.log(torch.clamp(ToOneHot(onDecOut6),1e-8)), x_mix_label) #onLossFunc(ToOneHot(onDecOut6), x_mix_label)
         super_Loss += sdtLossFunc(onDecOut6, curr_Sdt)
         
         # === Entropy Minimization ===
