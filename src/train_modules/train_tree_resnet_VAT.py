@@ -90,7 +90,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         # --- Loss ---        
         # === Supervised Loss ===
         super_Loss += onLossFunc(torch.log(torch.clamp(ToOneHot(onDecOut6),1e-8)), x_mix_label) #onLossFunc(ToOneHot(onDecOut6), x_mix_label)
-        super_Loss += sdtLossFunc(onDecOut6, curr_Sdt)
+        #super_Loss += sdtLossFunc(onDecOut6, curr_Sdt)
         
         # === Entropy Minimization ===
         # --- labeled ---
