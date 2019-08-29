@@ -40,10 +40,10 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = nn.NLLLoss() #nn.CrossEntropyLoss()#LabelSmoothingLoss() 
-    smLossFunc  = VATLoss_tree(ip=1) # can try ip=1
+    onLossFunc  = nn.NLLLoss() #LabelSmoothingLoss() 
+    smLossFunc  = VATLoss_tree() # can try ip=1
     enLossFunc  = EntropyLoss()
-    sdtLossFunc = loss_funcs[0]
+    sdtLossFunc = nn.BCELoss()
     
     target_Sdt  = target_Var[0] #SmoothTarget(target_Var[0], num_class=2) 
     target_Var  = ToLabel(ToOneHot(target_Var[0])) #SmoothTarget(ToOneHot(target_Var[0])) # to index label
@@ -72,24 +72,19 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
             u_unmix_data = torch.stack([ unlabel_t[0, :, :, random_position[i]:random_position[i]+window_size] for i in range(BATCH_SIZE)], dim=0)
         
         # ---Data Preprocessing ---
-        x_mix_data, u_mix_data, x_mix_label = DataPreprocess(labeled_data=x_unmix_data,
-                                                             labeled_label=target_Var[step:step+BATCH_SIZE],
-                                                             unlabeled_data=u_unmix_data,
-                                                             device=device
-                                                             )
-        curr_Sdt = target_Sdt[step:step+BATCH_SIZE]
-        curr_Sdt = curr_Sdt.to(device, non_blocking=True)
+        x_mix_data, u_mix_data, x_mix_label, curr_Sdt = DataPreprocess(labeled_data=x_unmix_data,
+                                                                       labeled_label=target_Var[step:step+BATCH_SIZE],
+                                                                       labeled_sdt=target_Sdt[step:step+BATCH_SIZE],
+                                                                       unlabeled_data=u_unmix_data,
+                                                                       device=device
+                                                                       )
+        
         # --- Pseudo Label ---
         # mix_label = torch.cat((x_mix_label, u_mix_label), dim=0)
         
-        # --- Variable ---
-        x_mix_data = Variable(x_mix_data)
-        u_mix_data = Variable(u_mix_data)
-        x_mix_label = Variable(x_mix_label)
-        
         # --- Run Model ---
-        onDecOut_mix = onDec(x_mix_data)  #onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) 
-        onDecOut6    = onDecOut_mix
+        #onDecOut_mix = onDec(x_mix_data)  #onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) 
+        onDecOut6    = onDec(x_mix_data) ###
         onDecOut6    = F.softmax(onDecOut6.view(3,-1,2), dim=2).view(-1,6)
         
         # --- Loss ---        
@@ -117,7 +112,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     
     return totLoss / input_time_step 
 
-def DataPreprocess(labeled_data, labeled_label,
+def DataPreprocess(labeled_data, labeled_label, labeled_sdt
                    unlabeled_data,
                    device,
                    transform_dict={'cutout'    :False, #{'n_holes':1, 'height':50, 'width':5}, 
@@ -143,6 +138,7 @@ def DataPreprocess(labeled_data, labeled_label,
     # --- Labeled Augmentation ---
     aug_x   = transform(labeled_data)
     label_x = labeled_label
+    label_s = labeled_sdt
     
     # --- Unlabeled Augmentation ---
     aug_u = transform(unlabeled_data)
@@ -153,13 +149,15 @@ def DataPreprocess(labeled_data, labeled_label,
     aug_x    = aug_x[shuffle]
     aug_u    = aug_u[shuffle2]
     label_x  = label_x[shuffle]
+    label_s  = label_s[shuffle]
     
     # --- CUDA ---
     aug_x   = aug_x.to(device)
     aug_u   = aug_u.to(device)
     label_x = label_x.to(device, non_blocking=True)
+    label_s = label_s.to(device, non_blocking=True)
     
-    return aug_x, aug_u, label_x
+    return aug_x, aug_u, label_x, label_s
 
 def Normalize(data):
     # Batchwise normalization (test)
