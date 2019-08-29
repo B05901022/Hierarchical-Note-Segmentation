@@ -112,7 +112,7 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     
     return totLoss / input_time_step 
 
-def DataPreprocess(labeled_data, labeled_label, labeled_sdt
+def DataPreprocess(labeled_data, labeled_label, labeled_sdt,
                    unlabeled_data,
                    device,
                    transform_dict={'cutout'    :False, #{'n_holes':1, 'height':50, 'width':5}, 
