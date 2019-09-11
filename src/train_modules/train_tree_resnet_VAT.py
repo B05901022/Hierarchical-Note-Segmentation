@@ -40,13 +40,13 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
     # decoder: AttentionClassifier
     onDec       = decoders[0]
     onDecOpt    = dec_opts[0]
-    onLossFunc  = nn.NLLLoss() #LabelSmoothingLoss() 
+    onLossFunc  = LabelSmoothingLoss() #nn.NLLLoss()
     smLossFunc  = VATLoss_tree() # can try ip=1
     enLossFunc  = EntropyLoss()
     sdtLossFunc = nn.BCELoss()
     
     target_Sdt  = target_Var[0] #SmoothTarget(target_Var[0], num_class=2) 
-    target_Var  = ToLabel(ToOneHot(target_Var[0])) #SmoothTarget(ToOneHot(target_Var[0])) # to index label
+    target_Var  = SmoothTarget(ToOneHot(target_Var[0])) #ToLabel(ToOneHot(target_Var[0])) # to index label
 
     input_time_step   = input_t.size()[3]
     unlabel_time_step = unlabel_t.size()[3]
@@ -84,16 +84,16 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
         
         # --- Run Model ---
         onDecOut_mix = onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) 
-        #onDecOut6    = onDec(x_mix_data)
+        #onDecOut6    = onDec(x_mix_data) ###
         onDecOut6    = F.softmax(onDecOut_mix.view(3,-1,2), dim=2).view(-1,6) ###
         
         # --- Loss ---        
         # === Supervised Loss ===
-        super_Loss += onLossFunc(torch.log(torch.clamp(ToOneHot(onDecOut6[:BATCH_SIZE]),1e-8)), x_mix_label) #onLossFunc(ToOneHot(onDecOut6), x_mix_label)
+        super_Loss += onLossFunc(torch.log(torch.clamp(ToOneHot(onDecOut6[:BATCH_SIZE]),1e-8)), x_mix_label)
         super_Loss += sdtLossFunc(onDecOut6[:BATCH_SIZE], curr_Sdt)
         
         # === Entropy Minimization ===
-        en_Loss    += enLossFunc(ToOneHot(onDecOut6))
+        en_Loss    += enLossFunc(ToOneHot(onDecOut6[BATCH_SIZE:]))
         
         # === VAT Loss ===
         smsup_Loss += smLossFunc(onDec, u_mix_data)
@@ -184,7 +184,7 @@ class LabelSmoothingLoss(nn.Module):
         x     : probability of outputs
         target: smooth label 
         """
-        return -torch.mean((smooth_target*torch.log(torch.clamp(x,1e-8))).sum(dim=1))
+        return -torch.mean((smooth_target*x).sum(dim=1))
 
 def SmoothTarget(target, smooth_eps=0.1, num_class=5):
     """
