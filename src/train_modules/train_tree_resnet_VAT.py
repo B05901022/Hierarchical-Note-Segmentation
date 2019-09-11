@@ -79,32 +79,27 @@ def train_resnet_4loss_VAT_tree(input_t, target_Var, decoders, dec_opts, device,
                                                                        device=device
                                                                        )
         
-        # --- Pseudo Label ---
+        # --- Mix Label ---
         # mix_label = torch.cat((x_mix_label, u_mix_label), dim=0)
         
         # --- Run Model ---
-        #onDecOut_mix = onDec(x_mix_data)  #onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) 
-        onDecOut6    = onDec(x_mix_data) ###
-        onDecOut6    = F.softmax(onDecOut6.view(3,-1,2), dim=2).view(-1,6)
+        onDecOut_mix = onDec(torch.cat((x_mix_data, u_mix_data),dim=0)) 
+        #onDecOut6    = onDec(x_mix_data)
+        onDecOut6    = F.softmax(onDecOut_mix.view(3,-1,2), dim=2).view(-1,6) ###
         
         # --- Loss ---        
         # === Supervised Loss ===
-        super_Loss += onLossFunc(torch.log(torch.clamp(ToOneHot(onDecOut6),1e-8)), x_mix_label) #onLossFunc(ToOneHot(onDecOut6), x_mix_label)
-        #super_Loss += sdtLossFunc(onDecOut6, curr_Sdt)
+        super_Loss += onLossFunc(torch.log(torch.clamp(ToOneHot(onDecOut6[:BATCH_SIZE]),1e-8)), x_mix_label) #onLossFunc(ToOneHot(onDecOut6), x_mix_label)
+        super_Loss += sdtLossFunc(onDecOut6[:BATCH_SIZE], curr_Sdt)
         
         # === Entropy Minimization ===
-        # --- labeled ---
-        #en_Loss    += enLossFunc(onDecOut6)
-        # --- unlabeled ---
-        #onDecOut6_u = onDecOut_mix[BATCH_SIZE:]
-        #onDecOut6_u = F.softmax(onDecOut6_u.view(3,-1,2), dim=2).view(-1,6)
-        #en_Loss    += enLossFunc(onDecOut6_u)
+        en_Loss    += enLossFunc(ToOneHot(onDecOut6))
         
         # === VAT Loss ===
         smsup_Loss += smLossFunc(onDec, u_mix_data)
         
-        print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step)) #'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)
-        onLoss = super_Loss + unlabel_lambda * smsup_Loss #+ en_Loss
+        print('supervised_Loss: %.10f' % (super_Loss.item() / input_time_step), 'semi-supervised_Loss: %.10f' % (unlabel_lambda * smsup_Loss.item() / input_time_step), 'entropy_Loss: %.10f' % (en_Loss.item() / input_time_step)) #
+        onLoss = super_Loss + unlabel_lambda * smsup_Loss + en_Loss
         onDecOpt.zero_grad()
         onLoss.backward()
         onDecOpt.step()
